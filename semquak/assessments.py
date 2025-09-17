@@ -1,7 +1,7 @@
-from datetime import datetime
-import os
-import pandas as pd
 from rdflib import Graph, Literal, URIRef
+from datetime import datetime
+import pandas as pd
+import os
 
 from config.metrics import metrics 
 from config.profile_attributes import profile_attributes
@@ -27,7 +27,7 @@ def load_existing_graph(output_file: str) -> Graph | None:
     
     
 # TODO: Implementare il confronto con gli assessment e non solo con l'ultimo
-def add_new_assessment(g: Graph, row, new_timestamp: datetime, new_version_tag: str):
+def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_version_tag: str):
     """
     Aggiunge un nuovo assessment al grafo, se estiste almeno una metrica diversa da quella dell' assessment precedente.
     Se tutte le metriche sono uguali, aggiorna solo la data di generazione dell'assessment uguale.
@@ -65,7 +65,7 @@ def add_new_assessment(g: Graph, row, new_timestamp: datetime, new_version_tag: 
         print("Aggiungo il nuovo assessment al grafo\n\n")
         g += temp_g
 
-def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, value: object, config, timestamp: datetime):
+def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, value: object, config: dict, timestamp: datetime):
     """
     Aggiunge o aggiorna un attributo del profilo e la relativa data di generazione
     """
@@ -82,7 +82,7 @@ def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRe
         g.set((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
 # TODO: da rivedere i predicati EX.hasProfileAttribute ed EX.AttributeContextAssessment
-def add_attribute_to_assessment(g: Graph, config, attribute_uri: URIRef, assessment_uri: URIRef, value: object, timestamp: datetime):
+def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, assessment_uri: URIRef, value: object, timestamp: datetime):
     """
     Collega l'attributo all'assessment e aggiorna il valore nel contesto dell'assessment
     """
@@ -103,8 +103,7 @@ def add_attribute_to_assessment(g: Graph, config, attribute_uri: URIRef, assessm
 
     g.add((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dataTime)))
 
-# TODO: Da gestire la rimozione degli attributi al profilo
-def add_profile_attributes(g: Graph, row, profile_uri: URIRef, assessment_uri: URIRef, timestamp: datetime):
+def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assessment_uri: URIRef, timestamp: datetime):
     """
     Aggiunge gli attributi del profilo di un KG al grafo.
     """
@@ -136,7 +135,7 @@ def add_profile_attributes(g: Graph, row, profile_uri: URIRef, assessment_uri: U
             g.add((attr_uri, EX.ComputedOver, target_uri))
             g.add((attr_prof_uri, EX.attributeProperty, attr_uri))
 
-def add_metrics(g: Graph, row, profile_uri: URIRef, new_timestamp: str, assessment_uri: URIRef, pred_values=None) -> bool:
+def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: str, assessment_uri: URIRef, pred_values: dict | None = None) -> bool:
     """
     Aggiunge le metriche di qualità di un KG al grafo e fa il confronto con le metriche dell'assessment precedente
 

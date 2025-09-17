@@ -1,5 +1,7 @@
 from rdflib import Graph, Literal, URIRef
 from config import metrics, profile_attributes
+from pandas import Series
+
 from config.namespaces import PROV, XSD
 from semquak.helpers import get_profile_uri
 from semquak.utils import clean_value
@@ -22,7 +24,7 @@ def get_latest_assessment_for_kg(g: Graph, kg_id: str) -> URIRef:
 
     return latest_assessment
 
-def extract_assessment_values(g: Graph, assessment_uri):
+def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
     """
     Estrae valori delle metriche e attributi di profilo da un assessment RDF.
 
@@ -74,7 +76,7 @@ def extract_assessment_values(g: Graph, assessment_uri):
 
     return values
 
-def extract_current_values_from_csv(row):
+def extract_current_values_from_csv(row: Series):
     """
     Estrae i valori correnti delle metriche e degli attributi di profilo da una riga del CSV.
     """
@@ -93,7 +95,7 @@ def extract_current_values_from_csv(row):
 
     return values
 
-def get_attribute_value(g: Graph, attribute_uri: URIRef, predicate: URIRef) :
+def get_attribute_value(g: Graph, attribute_uri: URIRef, predicate: URIRef) -> object | None:
     """
     Restituisce il valore di un attributo dato il suo URI e il predicato.
     """

@@ -1,8 +1,6 @@
-from datetime import datetime
-import logging
 from rdflib import Graph, Literal, URIRef
 from config import metrics, profile_attributes
-from config.namespaces import DQV, EX, PROF, PROV, RDF, XSD
+from config.namespaces import PROV, XSD
 from semquak.helpers import get_profile_uri
 from semquak.utils import clean_value
 

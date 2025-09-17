@@ -76,7 +76,7 @@ def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRe
     curr_value = str(clean_value(value)).lower()
 
     if prev_value != curr_value.strip():
-        # print ( curr_value, " <> ", prev_value)
+        print ( curr_value, " <> ", prev_value)
         g.remove((attribute_uri, config['predicate'], prev_value))
         safe_literal(g, value, config["predicate"], attribute_uri, datatype=config["datatype"])
         g.set((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
@@ -110,8 +110,13 @@ def add_profile_attributes(g: Graph, row, profile_uri: URIRef, assessment_uri: U
     """
     kg_id = str(row['KG id']).strip()
     g.add((assessment_uri, PROF.hasProfile, profile_uri)) 
+
     for attr_name, config in profile_attributes.items():
-        value = clean_value(row[attr_name])
+        raw_value = row.get(attr_name)
+        if raw_value is None:
+            continue
+        
+        value = clean_value(raw_value)
         if value is None:
             continue
         

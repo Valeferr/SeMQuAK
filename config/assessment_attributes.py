@@ -6,47 +6,47 @@ from config.namespaces import EX, META, SPA, VO, XSD, VOID, DCAT, DCTERMS
 
 assessment_attributes = {
         
-    # 'Languages (metadata)': {
-    #     'predicate': DCTERMS.language,
-    #     'datatype': XSD.string,
-    #     'access_methods': [META]
-    # },
+    'Languages (metadata)': {
+        'predicate': DCTERMS.language,
+        'datatype': XSD.string,
+        'access_methods': [META]
+    },
 
-    # 'Offline dumps': {
-    #     'predicate': EX.offlineDumps,
-    #     'datatype': XSD.string,
-    #     'access_methods': [META]
-    # },
+    'Offline dumps': {
+        'predicate': EX.offlineDumps,
+        'datatype': XSD.string,
+        'access_methods': [META]
+    },
 
-    # 'Vocabularies': {
-    #     'predicate': VOID.vocabulary,
-    #     'datatype': XSD.string,
-    #     'access_methods': [SPA, VO]
-    # },
+    'Vocabularies': {
+        'predicate': VOID.vocabulary,
+        'datatype': XSD.string,
+        'access_methods': [SPA, VO]
+    },
 
-    # 'URL for download the dataset': {
-    #     'predicate': VOID.dataDump,
-    #     'datatype': XSD.string,
-    #     'access_methods': [META, SPA, VO]
-    # },
+    'URL for download the dataset': {
+        'predicate': VOID.dataDump,
+        'datatype': XSD.string,
+        'access_methods': [META, SPA, VO]
+    },
 
-    # 'External links': {
-    #     'predicate': EX.hasExternalLinks,
-    #     'datatype': XSD.string,
-    #     'access_methods': [SPA]
-    # },
+    'External links': {
+        'predicate': EX.hasExternalLinks,
+        'datatype': XSD.string,
+        'access_methods': [SPA]
+    },
 
-    # 'Dataset update frequency': {
-    #     'predicate': EX.accrualPeriodicity,
-    #     'datatype': XSD.string,
-    #     'access_methods': [META]
-    # },
+    'Dataset update frequency': {
+        'predicate': EX.accrualPeriodicity,
+        'datatype': XSD.string,
+        'access_methods': [META]
+    },
 
-     # 'Dataset URL': {
-    #     'predicate': DCAT.accessURL,
-    #     'datatype': XSD.anyURI,
-    #     'access_methods': [SPA]
-    # },
+     'Dataset URL': {
+        'predicate': DCAT.accessURL,
+        'datatype': XSD.anyURI,
+        'access_methods': [SPA]
+    },
 
     'Sparql endpoint': {
         'predicate': VOID.sparqlEndpoint,
@@ -66,17 +66,17 @@ assessment_attributes = {
         'access_methods': [META]
     },
 
-    # 'License machine redeable (query)': {
-    #     'predicate': DCTERMS.license,
-    #     'datatype': XSD.anyURI,
-    #     'access_methods': [SPA]
-    # },
+    'License machine redeable (query)': {
+        'predicate': DCTERMS.license,
+        'datatype': XSD.anyURI,
+        'access_methods': [SPA]
+    },
 
-    # 'License human redeable': {
-    #     'predicate': EX.hasHumanReadableLicense,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [SPA]
-    # },
+    'License human redeable': {
+        'predicate': EX.hasHumanReadableLicense,
+        'datatype': XSD.boolean,
+        'access_methods': [SPA]
+    },
 
     'Use HTTPS': {
         'predicate': EX.usesHTTPS,

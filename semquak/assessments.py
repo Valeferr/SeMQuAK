@@ -37,7 +37,6 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
     new_assessment_uri = get_assessment_uri(kg_id, new_version_tag)
 
     temp_g = Graph()
-    bind_common_namespaces(temp_g)
 
     temp_g.add((new_assessment_uri, RDF.type, EX.Assessment))
     temp_g.add((profile_uri, RDF.type, DCAT.Dataset))
@@ -45,7 +44,6 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
     temp_g.add((new_assessment_uri, PROF.hasProfile, profile_uri))
     temp_g.add((new_assessment_uri, PROV.generateAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
 
-    add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp)
     latest_assessment = get_latest_assessment_for_kg(g, kg_id)
     
     if latest_assessment is not None:
@@ -56,6 +54,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
         prev_values = {'metrics': {}, 'attributes': {}}
 
     changed = add_metrics(temp_g, row, profile_uri, new_version_tag, new_assessment_uri, prev_values['metrics'])
+    add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, changed)
     
     if changed:
         if (latest_assessment):
@@ -103,12 +102,11 @@ def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, a
 
     g.add((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dataTime)))
 
-def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assessment_uri: URIRef, timestamp: datetime):
+def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assessment_uri: URIRef, timestamp: datetime, changed: bool):
     """
     Aggiunge gli attributi del profilo di un KG al grafo.
     """
     kg_id = str(row['KG id']).strip()
-    g.add((assessment_uri, PROF.hasProfile, profile_uri)) 
 
     for attr_name, config in profile_attributes.items():
         raw_value = row.get(attr_name)
@@ -124,8 +122,8 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
 
         add_attribute_to_profile(g, attr_prof_uri, profile_uri, value, config, timestamp)
 
-        if attr_name in assessment_attributes:
-            add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
+        if attr_name in assessment_attributes and not changed:
+           add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
         
         for i, prov in enumerate(config['access_methods'], start=1):
             attr_uri = URIRef(f"{get_attribute_uri(cleaned_attr_name)}_{i}")
@@ -230,6 +228,6 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
         g.add((profile_uri, RDF.type, DCAT.Dataset))
         g.add((profile_uri, DQV.qualityAssessment, assessment_uri))  
 
-        add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp)
+        add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, False)
         add_metrics(g, row, profile_uri, version_tag, assessment_uri)
     return g

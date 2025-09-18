@@ -1,8 +1,10 @@
 from rdflib import Graph, Literal, URIRef
-from config import metrics, profile_attributes
 from pandas import Series
 
+from config.profile_attributes import profile_attributes
 from config.namespaces import PROV, XSD
+from config.metrics import metrics 
+
 from semquak.helpers import get_profile_uri
 from semquak.utils import clean_value
 
@@ -24,6 +26,38 @@ def get_latest_assessment_for_kg(g: Graph, kg_id: str) -> URIRef:
 
     return latest_assessment
 
+def extract_metrics_values(g: Graph, assessment_uri: URIRef) -> list:
+    metrics_query = """
+        PREFIX dqv: <http://www.w3.org/ns/dqv#>
+
+        SELECT ?measurement ?metricValue
+        WHERE {
+            VALUES ?assessment { <%(assessment_uri)s> }
+            ?assessment dqv:hasQualityMeasurement ?measurement .
+            ?measurement dqv:value ?metricValue .
+        }
+    """ % {"assessment_uri": assessment_uri}
+
+    return g.query(metrics_query)
+
+def extract_profile_attribute_values(g: Graph, assessment_uri: URIRef) -> list:
+    attributes_query = """
+        PREFIX ex: <http://example.org/>
+        PREFIX dcterms: <http://purl.org/dc/terms/>
+
+        SELECT ?attrUri ?pred ?attrValue
+        WHERE {
+            VALUES ?assessment { <%(assessment_uri)s> }
+            ?assessment_uri ex:hasProfileAttribute ?attrUri .
+            ?attrUri ?pred ?attrValue .
+            FILTER( 
+                ?pred NOT IN (rdf:type, ex:attributeProperty, prov:generateAtTime)
+            )
+        }
+    """ % {"assessment_uri": assessment_uri}
+
+    return g.query(attributes_query)
+
 def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
     """
     Estrae valori delle metriche e attributi di profilo da un assessment RDF.
@@ -34,39 +68,15 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
         'attributes': { attr_name: value }
     }
     """
-
     values = {"metrics": {}, "attributes": {}}
 
-    metrics_query = """
-    PREFIX dqv: <http://www.w3.org/ns/dqv#>
-
-    SELECT ?measurement ?metricValue
-    WHERE {
-        VALUES ?assessment { <%(assessment_uri)s> }
-        ?assessment dqv:hasQualityMeasurement ?measurement .
-        ?measurement dqv:value ?metricValue .
-    }
-    """ % {"assessment_uri": assessment_uri}
-
-    for row in g.query(metrics_query):
-        cleaned = clean_value(row.metricValue)
+    metrics_results = extract_metrics_values(g, assessment_uri)
+    for row in metrics_results:
         metric_name = str(row.measurement.split("/")[-3].replace('_', ' '))
-        values["metrics"][metric_name] = cleaned
+        values["metrics"][metric_name] = clean_value(row.metricValue)
 
-    # TODO : Rivedere la seguente query
-    attributes_query = """
-    PREFIX ex: <http://example.org/ns#>
-    PREFIX prov: <http://www.w3.org/ns/prov#>
-
-    SELECT ?attrUri ?pred ?attrValue
-    WHERE {
-        ?assessment ex:hasProfileAttribute ?attrUri .
-        ?attrUri ?pred ?attrValue .
-    }
-    """
-    results = g.query(attributes_query, initBindings={"assessment": assessment_uri})
-
-    for row in results:
+    attributes_results = extract_profile_attribute_values(g, assessment_uri)
+    for row in attributes_results:
         attr_name = str(row.attrUri.split("/")[-3]).replace("_", " ")
         pred = str(row.pred)
         if attr_name in profile_attributes:

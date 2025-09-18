@@ -7,7 +7,7 @@ from rdflib import XSD, Graph, Literal, URIRef
 from config.errors import ERROR_DEFINITIONS, special_mapping
 from config.namespaces import ERROR
 
-invalid_values = {
+INVALID_VALUES = {
         "none", "nan", "null","", "-", "absent", "[]", "{}",
         "void file absent", "\"\"", "''", " ", "[\'\']"
 }
@@ -21,6 +21,8 @@ DATETIME_FORMATS = [
     "%Y-%m-%dT%H:%M:%S.%f",
 ]
 
+CONFIG_FILE = "config/metrics.py"
+
 def extract_timestamp_from_filename(filename: str) -> datetime:
     """
     Estrae la data dal nome del file CSV.
@@ -32,7 +34,7 @@ def clean_value(value: object) -> str | None:
     """
     Pulisce un valore dai casi invalidi e normalizza separatori decimali.
     """
-    if pd.isna(value) or str(value).strip().lower() in invalid_values:
+    if pd.isna(value) or str(value).strip().lower() in INVALID_VALUES:
         return None
     s = str(value).strip()
     return s.replace(',', '.')
@@ -102,7 +104,6 @@ def map_http_error(value):
     code = special_mapping.get(value.lower())
     if code:
         return ERROR[code]
-
     return None
 
 def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef, datatype: URIRef =None) -> None:
@@ -126,3 +127,19 @@ def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef
         g.add((subject_uri, predicate, literal))
     else:
         print(f"Warning: Non posso validare '{cleaned}' come {datatype} per {subject_uri} -> {predicate}")
+
+def add_new_metric_to_config(metric_name, datatype: str="string", access_methods="[UN]"):
+    """
+    Aggiunge una nuova metrica al file metrics.py che non esiste
+    """
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    pos = content.rfind("}")
+    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods}\n\t}},\n'
+    new_content = content[:pos] + new_entry + content[pos:]
+
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    print(f"Metrica '{metric_name}' aggiunta\n\n")

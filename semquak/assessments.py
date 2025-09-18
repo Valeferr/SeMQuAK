@@ -10,7 +10,7 @@ from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
 from semquak.extractors import extract_assessment_values, get_attribute_value, get_latest_assessment_for_kg
 from semquak.helpers import add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
-from semquak.utils import clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
+from semquak.utils import add_new_metric_to_config, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
 
 def load_existing_graph(output_file: str) -> Graph | None:
     """
@@ -181,6 +181,7 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
                 'datatype': datatype,
                 'access_methods': access_methods,
             }
+            add_new_metric_to_config(metric_name)
             changed = True
 
         qa_uri = get_quality_measurement_uri(cleaned_metric_name, kg_id, new_timestamp)

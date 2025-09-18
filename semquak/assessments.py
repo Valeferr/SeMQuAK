@@ -10,7 +10,7 @@ from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
 from semquak.extractors import extract_assessment_values, get_attribute_value, get_latest_assessment_for_kg
 from semquak.helpers import add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
-from semquak.utils import clean_identifier, clean_value, safe_literal
+from semquak.utils import clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
 
 def load_existing_graph(output_file: str) -> Graph | None:
     """
@@ -64,20 +64,26 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
         print("Aggiungo il nuovo assessment al grafo\n\n")
         g += temp_g
 
-def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, value: object, config: dict, timestamp: datetime):
+def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, curr_value: object, config: dict, timestamp: datetime):
     """
     Aggiunge o aggiorna un attributo del profilo e la relativa data di generazione
     """
     g.add((profile_uri, EX.hasAttribute, attribute_uri))
     g.add((attribute_uri, RDF.type, EX.Attribute))
+    predicate = config['predicate']
+    datatype = config["datatype"]
 
-    prev_value = str(get_attribute_value(g, attribute_uri, config['predicate'])).lower()
-    curr_value = str(clean_value(value)).lower()
+    prev_value = str(get_attribute_value(g, attribute_uri, predicate))
+
+    error_uri = map_http_error(curr_value)
+    if error_uri:
+        curr_value = error_uri
+    else:
+        curr_value = validate_datatype(curr_value, datatype)
 
     if prev_value != curr_value.strip():
-        print ( curr_value, " <> ", prev_value)
-        g.remove((attribute_uri, config['predicate'], prev_value))
-        safe_literal(g, value, config["predicate"], attribute_uri, datatype=config["datatype"])
+        print (attribute_uri, ": ", prev_value, " <> ", curr_value)
+        g.set((attribute_uri, predicate, curr_value))
         g.set((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
 # TODO: da rivedere i predicati EX.hasProfileAttribute ed EX.AttributeContextAssessment

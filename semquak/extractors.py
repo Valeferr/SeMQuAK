@@ -40,7 +40,7 @@ def extract_metrics_values(g: Graph, assessment_uri: URIRef) -> list:
 
     return g.query(metrics_query)
 
-def extract_profile_attribute_values(g: Graph, assessment_uri: URIRef) -> list:
+def extract_assessment_attribute_values(g: Graph, assessment_uri: URIRef) -> list:
     attributes_query = """
         PREFIX ex: <http://example.org/>
         PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -75,7 +75,7 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
         metric_name = str(row.measurement.split("/")[-3].replace('_', ' '))
         values["metrics"][metric_name] = clean_value(row.metricValue)
 
-    attributes_results = extract_profile_attribute_values(g, assessment_uri)
+    attributes_results = extract_assessment_attribute_values(g, assessment_uri)
     for row in attributes_results:
         attr_name = str(row.attrUri.split("/")[-3]).replace("_", " ")
         pred = str(row.pred)

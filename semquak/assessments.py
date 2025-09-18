@@ -19,7 +19,7 @@ def load_existing_graph(output_file: str) -> Graph | None:
     g = Graph()
     if os.path.exists(output_file):
         g.parse(output_file, format="turtle")
-        print("Caricato grafo esistente da %s", output_file)
+        print("Caricato grafo esistente da", output_file)
         return g
     else:
         print("Nessun grafo esistente da load_existing_graph")
@@ -57,12 +57,12 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
     add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, changed)
     
     if changed:
+        print("Aggiungo il nuovo assessment al grafo\n\n")
+        g += temp_g
+    else:
         if (latest_assessment):
             print("Aggiorno solo la data di generazione dell'assessment precedente\n\n")
             g.add((latest_assessment, PROV.generateAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
-    else:
-        print("Aggiungo il nuovo assessment al grafo\n\n")
-        g += temp_g
 
 def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, curr_value: object, config: dict, timestamp: datetime):
     """
@@ -81,8 +81,9 @@ def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRe
     else:
         curr_value = validate_datatype(curr_value, datatype)
 
-    if prev_value != curr_value.strip():
-        print (attribute_uri, ": ", prev_value, " <> ", curr_value)
+    if str(prev_value) != str(curr_value):
+        attribute_name = attribute_uri.split("/")[-2].replace("_", " ")
+        print(f"{attribute_name} {predicate}: {prev_value} -> {curr_value}")
         g.set((attribute_uri, predicate, curr_value))
         g.set((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
@@ -128,7 +129,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
 
         add_attribute_to_profile(g, attr_prof_uri, profile_uri, value, config, timestamp)
 
-        if attr_name in assessment_attributes and not changed:
+        if attr_name in assessment_attributes and changed:
            add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
         
         for i, prov in enumerate(config['access_methods'], start=1):
@@ -145,11 +146,11 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
 
     Returns:
         bool: 
-            - True se NON ci sono differenze rispetto all'assessment precedente
-            - False se sono state rilevate differenze o aggiunte nuove metriche
+            - True se sono state rilevate differenze o aggiunte nuove metriche
+            - False se NON ci sono differenze rispetto all'assessment precedente
     """
     kg_id = str(row['KG id']).strip()
-    changed = True
+    changed = False
 
     for metric_name in row.index:
         if metric_name in profile_attributes:
@@ -166,10 +167,10 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
             datatype = config['datatype']
             access_methods = config['access_methods']
 
-            if pred_values is None:
-                changed = False
-            elif pred_values is not None and value != pred_values.get(metric_name):
-                changed = False
+            prev_value = pred_values.get(metric_name) if pred_values else None
+            if prev_value is None or str(value) != str(prev_value):
+                print(f"Metrica '{metric_name}' cambiata: {prev_value} -> {value}")
+                changed = True
 
         else:
             # Aggiungo la metrica sconosciuta con configurazione di default
@@ -180,17 +181,15 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
                 'datatype': datatype,
                 'access_methods': access_methods,
             }
-            changed = False
+            changed = True
 
         qa_uri = get_quality_measurement_uri(cleaned_metric_name, kg_id, new_timestamp)
         g.add((assessment_uri, DQV.hasQualityMeasurement, qa_uri))
         g.add((qa_uri, RDF.type, DQV.QualityMeasurement))
         g.add((qa_uri, DQV.computedOn, profile_uri)) 
 
-        metric_uri = get_metric_uri(cleaned_metric_name)
-        
         for i, prov in enumerate(config['access_methods'], start=1):
-            metric_uri = QM[f"{cleaned_metric_name}_{i}"]
+            metric_uri = URIRef(f"{get_metric_uri(cleaned_metric_name)}{i}")
             g.add((metric_uri, RDF.type, DQV.Metric))
             g.add((metric_uri, RDFS.label, Literal(metric_name, datatype=XSD.string)))
             target_uri = prov if isinstance(prov, URIRef) else URIRef(prov)
@@ -200,9 +199,9 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
         safe_literal(g, value, DQV.value, qa_uri, datatype=datatype)
 
     if changed:
-        print("Nessuna differenza trovata")
-    else:
         print("Cambiamenti rilevati")
+    else:
+        print("Nessuna differenza trovata")
 
     return changed
 

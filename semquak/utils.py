@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 from rdflib import XSD, Graph, Literal, URIRef
 
+from config.metrics import metrics
 from config.errors import ERROR_DEFINITIONS, special_mapping
 from config.namespaces import ERROR
 
@@ -22,6 +23,7 @@ DATETIME_FORMATS = [
 ]
 
 CONFIG_FILE = "config/metrics.py"
+added_metrics = list()
 
 def extract_timestamp_from_filename(filename: str) -> datetime:
     """
@@ -131,15 +133,28 @@ def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef
 def add_new_metric_to_config(metric_name, datatype: str="string", access_methods="[UN]"):
     """
     Aggiunge una nuova metrica al file metrics.py che non esiste
-    """
+    """    
+    if metric_name in added_metrics:
+        return 
+
     with open(CONFIG_FILE, "r", encoding="utf-8") as f:
         content = f.read()
 
+    if f'metrics["{metric_name}"]' in content:
+        return
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    if f'metrics["{metric_name}"]' in content:
+        return
+
+    print(f"Metrica sconosciuta '{metric_name}', l'aggiungo.")
     pos = content.rfind("}")
-    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods}\n\t}},\n'
+    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods}\n\t}},\n\n'
     new_content = content[:pos] + new_entry + content[pos:]
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         f.write(new_content)
 
+    added_metrics.append(metric_name)
     print(f"Metrica '{metric_name}' aggiunta\n\n")

@@ -174,14 +174,9 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
 
         else:
             # Aggiungo la metrica sconosciuta con configurazione di default
-            print(f"Metrica sconosciuta '{metric_name}' per KG ID {kg_id}, la aggiungo comunque.")
-            datatype = XSD.string
+            datatype = "string"
             access_methods = [UN]
-            metrics[metric_name] = {
-                'datatype': datatype,
-                'access_methods': access_methods,
-            }
-            add_new_metric_to_config(metric_name)
+            add_new_metric_to_config(metric_name, datatype)
             changed = True
 
         qa_uri = get_quality_measurement_uri(cleaned_metric_name, kg_id, new_timestamp)
@@ -189,7 +184,7 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
         g.add((qa_uri, RDF.type, DQV.QualityMeasurement))
         g.add((qa_uri, DQV.computedOn, profile_uri)) 
 
-        for i, prov in enumerate(config['access_methods'], start=1):
+        for i, prov in enumerate(access_methods, start=1):
             metric_uri = URIRef(f"{get_metric_uri(cleaned_metric_name)}{i}")
             g.add((metric_uri, RDF.type, DQV.Metric))
             g.add((metric_uri, RDFS.label, Literal(metric_name, datatype=XSD.string)))

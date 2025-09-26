@@ -84,81 +84,81 @@ assessment_attributes = {
         'access_methods': [SPA]
     },
 
-    # 'Requires authentication': {
-    #     'predicate': EX.requiresAuthentication,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META]
-    # },
+    'Requires authentication': {
+        'predicate': EX.requiresAuthentication,
+        'datatype': XSD.boolean,
+        'access_methods': [META]
+    },
 
-    # 'Availability of a common accepted Media Type': {
-    #     'predicate': EX.availebilityMediaType,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META]
-    # },
+    'Availability of a common accepted Media Type': {
+        'predicate': EX.availebilityMediaType,
+        'datatype': XSD.boolean,
+        'access_methods': [META]
+    },
 
-    # 'Availability of RDF dump (query)': {
-    #     'predicate': VOID.dataDump,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META, SPA, VO]
-    # },
+    'Availability of RDF dump (query)': {
+        'predicate': VOID.dataDump,
+        'datatype': XSD.boolean,
+        'access_methods': [META, SPA, VO]
+    },
 
-    # 'Inactive links': {
-    #     'predicate': EX.inactiveLinks,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META]
-    # },
+    'Inactive links': {
+        'predicate': EX.inactiveLinks,
+        'datatype': XSD.boolean,
+        'access_methods': [META]
+    },
 
-    # 'Availability for download (query)' : {
-    #     'predicate': EX.availabilityForDownload,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [SPA]
-    # },
+    'Availability for download (query)' : {
+        'predicate': EX.availabilityForDownload,
+        'datatype': XSD.boolean,
+        'access_methods': [SPA]
+    },
 
-    # 'Uses RDF structures': {
-    #     'predicate': EX.usesRDFStructures,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META]
-    # },
+    'Uses RDF structures': {
+        'predicate': EX.usesRDFStructures,
+        'datatype': XSD.boolean,
+        'access_methods': [META]
+    },
 
-    # 'Ontology Hijacking problem': {
-    #     'predicate': EX.hasOntologyHijacking,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [SPA]
-    # },
+    'Ontology Hijacking problem': {
+        'predicate': EX.hasOntologyHijacking,
+        'datatype': XSD.boolean,
+        'access_methods': [SPA]
+    },
 
-    # 'Limited': {
-    #     'predicate': EX.isLimited,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [SPA]
-    # },
+    'Limited': {
+        'predicate': EX.isLimited,
+        'datatype': XSD.boolean,
+        'access_methods': [SPA]
+    },
 
-    # 'Is on a trusted provider list': {
-    #     'predicate': EX.isTrustedProvider,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META]
-    # },
+    'Is on a trusted provider list': {
+        'predicate': EX.isTrustedProvider,
+        'datatype': XSD.boolean,
+        'access_methods': [META]
+    },
 
-    # 'Presence of example': {
-    #     'predicate': EX.hasExample,
-    #     'datatype': XSD.boolean,
-    #     'access_methods': [META]
-    # },
+    'Presence of example': {
+        'predicate': EX.hasExample,
+        'datatype': XSD.boolean,
+        'access_methods': [META]
+    },
 
-    # 'metadata-media-type': {
-    #     'predicate': DCAT.mediaType,
-    #     'datatype': XSD.string,
-    #     'access_methods': [META]
-    # },
+    'metadata-media-type': {
+        'predicate': DCAT.mediaType,
+        'datatype': XSD.string,
+        'access_methods': [META]
+    },
 
-    # 'Languages (query)': {
-    #     'predicate': DCTERMS.language,
-    #     'datatype': XSD.string,
-    #     'access_methods': [SPA]
-    # },
+    'Languages (query)': {
+        'predicate': DCTERMS.language,
+        'datatype': XSD.string,
+        'access_methods': [SPA]
+    },
 
-    # 'Serialization formats': {
-    #     'predicate': DCTERMS.format,
-    #     'datatype': XSD.string,
-    #     'access_methods': [META]
-    # },
+    'Serialization formats': {
+        'predicate': DCTERMS.format,
+        'datatype': XSD.string,
+        'access_methods': [META]
+    },
 }

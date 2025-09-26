@@ -145,7 +145,7 @@ def get_all_assessments_for_kg(g: Graph, kg_id: str) -> list[URIRef]:
 
     SELECT ?assessment
     WHERE {
-        <%(profile_uri)s> dqv:qualityAssessment ?assessment ;
+        <%(profile_uri)s> ex:hasAssessment ?assessment ;
     }
     """ % {"profile_uri": profile_uri}
 

@@ -52,7 +52,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
         print("Nessun assessment precedente trovato")
         prev_values = {'metrics': {}, 'attributes': {}}
 
-    changed = add_metrics(temp_g, row, profile_uri, new_version_tag, new_assessment_uri, prev_values['metrics'])
+    changed = add_metrics(temp_g, row, new_version_tag, new_assessment_uri, prev_values['metrics'])
     add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, changed)
     
     if changed:
@@ -139,7 +139,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
             g.add((attr_uri, EX.ComputedOver, target_uri))
             g.add((attr_prof_uri, EX.attributeProperty, attr_uri))
 
-def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: str, assessment_uri: URIRef, pred_values: dict | None = None) -> bool:
+def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: URIRef, pred_values: dict | None = None) -> bool:
     """
     Aggiunge le metriche di qualità di un KG al grafo e fa il confronto con le metriche dell'assessment precedente
 
@@ -181,7 +181,7 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
         qa_uri = get_quality_measurement_uri(cleaned_metric_name, kg_id, new_timestamp)
         g.add((assessment_uri, DQV.hasQualityMeasurement, qa_uri))
         g.add((qa_uri, RDF.type, DQV.QualityMeasurement))
-        g.add((qa_uri, DQV.computedOn, profile_uri)) 
+        g.add((qa_uri, DQV.computedOn, assessment_uri)) 
         safe_literal(g, value, DQV.value, qa_uri, datatype=datatype)
 
         for i, prov in enumerate(access_methods, start=1):
@@ -228,5 +228,5 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
         g.add((profile_uri, EX.hasAssessment, assessment_uri))  
 
         add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, False)
-        add_metrics(g, row, profile_uri, version_tag, assessment_uri)
+        add_metrics(g, row, version_tag, assessment_uri)
     return g

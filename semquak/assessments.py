@@ -8,7 +8,7 @@ from config.profile_attributes import profile_attributes
 from config.assessment_attributes import assessment_attributes
 from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
-from semquak.extractors import extract_assessment_values, get_attribute_value, get_latest_assessment_for_kg
+from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value, get_latest_assessment_for_kg
 from semquak.helpers import add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
 from semquak.utils import add_new_metric_to_config, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
 
@@ -25,7 +25,6 @@ def load_existing_graph(output_file: str) -> Graph | None:
         print("Nessun grafo esistente da load_existing_graph")
         return None
     
-    
 # TODO: Implementare il confronto con gli assessment e non solo con l'ultimo
 def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_version_tag: str):
     """
@@ -40,7 +39,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
 
     temp_g.add((new_assessment_uri, RDF.type, EX.Assessment))
     temp_g.add((profile_uri, RDF.type, DCAT.Dataset))
-    temp_g.add((profile_uri, DQV.qualityAssessment, new_assessment_uri))
+    temp_g.add((profile_uri, EX.hasAssessment, new_assessment_uri))
     temp_g.add((new_assessment_uri, PROF.hasProfile, profile_uri))
     temp_g.add((new_assessment_uri, PROV.generateAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
 
@@ -129,7 +128,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
 
         add_attribute_to_profile(g, attr_prof_uri, profile_uri, value, config, timestamp)
 
-        if attr_name in assessment_attributes and changed:
+        if attr_name in assessment_attributes and not changed:
            add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
         
         for i, prov in enumerate(config['access_methods'], start=1):
@@ -222,12 +221,12 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
         assessment_uri = get_assessment_uri(kg_id, version_tag)
         print(f"Creo assessment: {assessment_uri}")
 
-        g.add((assessment_uri, RDF.type, EX.Assessment)) 
+        g.add((assessment_uri, RDF.type, EX.QualityAssessment)) 
         g.add((assessment_uri, PROF.hasProfile, profile_uri))          
         g.add((assessment_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
         g.add((profile_uri, RDF.type, DCAT.Dataset))
-        g.add((profile_uri, DQV.qualityAssessment, assessment_uri))  
+        g.add((profile_uri, EX.hasAssessment, assessment_uri))  
 
         add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, False)
         add_metrics(g, row, profile_uri, version_tag, assessment_uri)

@@ -1,7 +1,8 @@
 from rdflib import Graph, Literal, URIRef
 
+from config.dimensions import dimensions
 from config.errors import ERROR_DEFINITIONS
-from config.namespaces import EX, PROF, QM, RDFS, SPA, META, VO, UN, ERROR, XSD, DQV, DCAT, PROV, OWL, RDF
+from config.namespaces import EX, PROF, QM, RDFS, SKOS, SPA, META, VO, UN, ERROR, XSD, DQV, DCAT, PROV, OWL, RDF
 
 def get_assessment_uri(kg_id: str, version_tag: str) -> URIRef:
     """Genera l'URI di un assessment dato il KG ID e il version tag"""
@@ -26,6 +27,14 @@ def get_metric_uri(metric_name: str) -> URIRef:
 def get_attribute_uri(attr_name: str) -> URIRef:
     """Genera l'URI di un attributo dato il nome dell'attributo"""
     return URIRef(PROF[f"attribute/{attr_name}_"])
+
+def get_dimension_uri(dim_name: str) -> URIRef:
+    """Genera l'URI di una dimensione dato il nome della dimensione"""
+    return URIRef(EX[dim_name])
+
+def get_category_uri(category_name: str) -> URIRef:
+    """Genera l'URI di una categoria dato il suo nome"""
+    return URIRef(EX[category_name])
 
 def create_error_node(graph : Graph, code: int, label: str) -> URIRef:
     """Crea i nodi di errore e li aggiunge al grafo"""
@@ -68,3 +77,18 @@ def bind_common_namespaces(graph: Graph):
     graph.bind("prov", PROV) 
     graph.bind("owl", OWL)
     graph.bind("rdf", RDF)
+
+def add_categories_and_dimensions_nodes(g: Graph):
+    """
+    Aggiunge i nodi delle categorie delle metriche del grafo
+    """
+    for dim_name, config in dimensions.items():
+        print(dim_name)
+        dim_uri = get_dimension_uri(dim_name.replace(" ", "_"))
+        category_uri = get_category_uri(config["category"].replace(" ", "_"))
+
+        g.add((dim_uri, RDF.type, DQV.Dimension))
+        g.add((dim_uri, SKOS.prefLabel, Literal(dim_name, lang="en")))
+        g.add((dim_uri, SKOS.definition, Literal(config["definition"], lang="en")))
+        g.add((dim_uri, DQV.inCategory, category_uri))
+    

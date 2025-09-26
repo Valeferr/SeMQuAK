@@ -150,7 +150,7 @@ def add_new_metric_to_config(metric_name, datatype: str="string", access_methods
 
     print(f"Metrica sconosciuta '{metric_name}', l'aggiungo.")
     pos = content.rfind("}")
-    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods}\n\t}},\n\n'
+    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods}\n\t\t"dimension": "",\n\t"}},\n\n'
     new_content = content[:pos] + new_entry + content[pos:]
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

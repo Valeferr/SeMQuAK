@@ -182,6 +182,7 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
         g.add((assessment_uri, DQV.hasQualityMeasurement, qa_uri))
         g.add((qa_uri, RDF.type, DQV.QualityMeasurement))
         g.add((qa_uri, DQV.computedOn, profile_uri)) 
+        safe_literal(g, value, DQV.value, qa_uri, datatype=datatype)
 
         for i, prov in enumerate(access_methods, start=1):
             metric_uri = URIRef(f"{get_metric_uri(cleaned_metric_name)}{i}")
@@ -190,8 +191,6 @@ def add_metrics(g: Graph, row: pd.Series, profile_uri: URIRef, new_timestamp: st
             target_uri = prov if isinstance(prov, URIRef) else URIRef(prov)
             g.add((metric_uri, EX.ComputedOver, target_uri))
             g.add((qa_uri, DQV.metric, metric_uri))
-
-        safe_literal(g, value, DQV.value, qa_uri, datatype=datatype)
 
     if changed:
         print("Cambiamenti rilevati")

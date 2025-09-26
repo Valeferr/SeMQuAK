@@ -140,12 +140,13 @@ def get_all_assessments_for_kg(g: Graph, kg_id: str) -> list[URIRef]:
 
     query = """
     PREFIX dqv: <http://www.w3.org/ns/dqv#>
-    PREFIX ex: <http://example.org/ns#>
+    PREFIX ex: <http://example.org/>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX profile: <http://www.w3.org/ns/dx/profile/>
 
     SELECT ?assessment
     WHERE {
-        <%(profile_uri)s> ex:hasAssessment ?assessment ;
+        <%(profile_uri)s> dqv:qualityAssessment ?assessment .
     }
     """ % {"profile_uri": profile_uri}
 

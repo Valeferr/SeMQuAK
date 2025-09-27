@@ -105,6 +105,8 @@ def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, a
         target_uri = prov if isinstance(prov, URIRef) else URIRef(prov)
         g.add((attr_ass_uri, EX.ComputedOver, target_uri))
         g.add((attribute_uri, EX.attributeProperty, attr_ass_uri))
+        add_dimension(g, config["dimension"], attr_ass_uri)
+
 
     g.add((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dataTime)))
 
@@ -138,6 +140,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
             target_uri = prov if isinstance(prov, URIRef) else URIRef(prov)
             g.add((attr_uri, EX.ComputedOver, target_uri))
             g.add((attr_prof_uri, EX.attributeProperty, attr_uri))
+            add_dimension(g, config["dimension"], attr_uri)
 
 def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: URIRef, pred_values: dict | None = None) -> bool:
     """

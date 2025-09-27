@@ -150,5 +150,4 @@ def get_all_assessments_for_kg(g: Graph, kg_id: str) -> list[URIRef]:
     }
     """ % {"profile_uri": profile_uri}
 
-    results = g.query(query)
-    return [row.assessment for row in results]
+    return g.query(query)

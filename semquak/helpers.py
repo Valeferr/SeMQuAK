@@ -83,7 +83,6 @@ def add_categories_and_dimensions_nodes(g: Graph):
     Aggiunge i nodi delle categorie delle metriche del grafo
     """
     for dim_name, config in dimensions.items():
-        print(dim_name)
         dim_uri = get_dimension_uri(dim_name.replace(" ", "_"))
         category_uri = get_category_uri(config["category"].replace(" ", "_"))
 

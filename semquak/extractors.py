@@ -37,8 +37,8 @@ def extract_metrics_values(g: Graph, assessment_uri: URIRef) -> list:
             ?measurement dqv:value ?metricValue .
         }
     """ % {"assessment_uri": assessment_uri}
-
-    return g.query(metrics_query)
+    result = g.query(metrics_query)
+    return [r for r in result]
 
 def extract_assessment_attribute_values(g: Graph, assessment_uri: URIRef) -> list:
     attributes_query = """
@@ -149,5 +149,5 @@ def get_all_assessments_for_kg(g: Graph, kg_id: str) -> list[URIRef]:
         <%(profile_uri)s> ex:hasAssessment ?assessment .
     }
     """ % {"profile_uri": profile_uri}
-
-    return g.query(query)
+    result = g.query(query)
+    return [row.assessment for row in result]

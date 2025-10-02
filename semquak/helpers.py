@@ -6,7 +6,7 @@ from config.namespaces import EX, PROF, QM, RDFS, SKOS, SPA, META, VO, UN, ERROR
 
 def get_assessment_uri(kg_id: str, version_tag: str) -> URIRef:
     """Genera l'URI di un assessment dato il KG ID e il version tag"""
-    return URIRef(EX[f"assessment/{kg_id}/{version_tag}"])
+    return URIRef(EX[f"measurement/{kg_id}/{version_tag}"])
 
 def get_profile_uri(kg_id: str) -> URIRef:
     """Genera l'URI di un profilo dato il KG ID"""

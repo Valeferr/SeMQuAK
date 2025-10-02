@@ -62,7 +62,7 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
     """
     Estrae valori delle metriche e attributi di profilo da un assessment RDF.
 
-    Ritorna un dizionario con struttura:
+    Restituisce un dizionario con struttura:
     {
         'metrics': { metric_name: value },
         'attributes': { attr_name: value }

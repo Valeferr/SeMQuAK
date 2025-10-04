@@ -179,4 +179,53 @@ assessment_attributes = {
         "access_methods": [META],
         "dimension": "Versatility",
     },
+
+    "Availability VoID file": {
+        "predicate": EX.availabilityVoIDFile,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Availability",
+    },
+
+    "Author (metadata)": {
+        "predicate": DCTERMS.creator,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Verifiability",
+    },
+
+    "Sources": {
+        "predicate": DCTERMS.source,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Availability",
+    },
+
+    "Availability VoID file": {
+        "predicate": EX.availabilityVoIDFile,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Availability",
+    },
+
+    "Availability of RDF dump (metadata)": {
+        "predicate": VOID.dataDump,
+        "datatype": XSD.boolean,
+        "access_methods": [META, VO],
+        "dimension": "Versatility",
+    },
+
+    "Contributor": {
+        "predicate": DCTERMS.contributor,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Verifiability",
+    },
+
+    "Publisher": {
+        "predicate": DCTERMS.publisher,
+        "datatype": XSD.string,
+        "access_methods": [SPA],
+        "dimension": "Verifiability",
+    },
 }

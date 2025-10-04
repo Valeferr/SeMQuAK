@@ -32,8 +32,8 @@ def extract_metrics_values(g: Graph, assessment_uri: URIRef) -> list:
 
         SELECT ?measurement ?metricValue
         WHERE {
-            VALUES ?assessment { <%(assessment_uri)s> }
-            ?assessment dqv:hasQualityMeasurement ?measurement .
+            VALUES ?assessment_uri { <%(assessment_uri)s> }
+            ?assessment_uri dqv:hasQualityMeasurement ?measurement .
             ?measurement dqv:value ?metricValue .
         }
     """ % {"assessment_uri": assessment_uri}
@@ -47,7 +47,7 @@ def extract_assessment_attribute_values(g: Graph, assessment_uri: URIRef) -> lis
 
         SELECT ?attrUri ?pred ?attrValue
         WHERE {
-            VALUES ?assessment { <%(assessment_uri)s> }
+            VALUES ?assessment_uri { <%(assessment_uri)s> }
             ?assessment_uri ex:hasProfileAttribute ?attrUri .
             ?attrUri ?pred ?attrValue .
             FILTER( 
@@ -73,7 +73,7 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
     metrics_results = extract_metrics_values(g, assessment_uri)
     for row in metrics_results:
         metric_name = str(row.measurement.split("/")[-3].replace('_', ' '))
-        values["metrics"][metric_name] = clean_value(row.metricValue)
+        values["metrics"][metric_name] = row.metricValue
 
     attributes_results = extract_assessment_attribute_values(g, assessment_uri)
     for row in attributes_results:
@@ -82,7 +82,7 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
         if attr_name in profile_attributes:
             expected_pred = str(profile_attributes[attr_name]["predicate"])
             if pred == expected_pred:
-                values["attributes"][attr_name] = clean_value(row.attrValue)
+                values["attributes"][attr_name] = row.attrValue
 
     return values
 
@@ -146,7 +146,7 @@ def get_all_assessments_for_kg(g: Graph, kg_id: str) -> list[URIRef]:
 
     SELECT ?assessment
     WHERE {
-        <%(profile_uri)s> ex:hasAssessment ?assessment .
+        <%(profile_uri)s> ex:hasQualityAssessment ?assessment .
     }
     """ % {"profile_uri": profile_uri}
     result = g.query(query)

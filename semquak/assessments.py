@@ -10,7 +10,7 @@ from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
 from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value, get_latest_assessment_for_kg
 from semquak.helpers import add_categories_and_dimensions_nodes, add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_dimension_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
-from semquak.utils import add_new_metric_to_config, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
+from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
 
 def load_existing_graph(output_file: str) -> Graph | None:
     """
@@ -72,7 +72,7 @@ def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRe
     predicate = config['predicate']
     datatype = config["datatype"]
 
-    prev_value = str(get_attribute_value(g, attribute_uri, predicate))
+    prev_value = get_attribute_value(g, attribute_uri, predicate)
 
     error_uri = map_http_error(curr_value)
     if error_uri:
@@ -80,11 +80,23 @@ def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRe
     else:
         curr_value = validate_datatype(curr_value, datatype)
 
-    if str(prev_value) != str(curr_value):
-        attribute_name = attribute_uri.split("/")[-2].replace("_", " ")
-        print(f"{attribute_name} {predicate}: {prev_value} -> {curr_value}")
-        g.set((attribute_uri, predicate, curr_value))
-        g.set((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
+    values_are_different = (
+        prev_value is None or 
+        str(prev_value) != str(curr_value) or
+        type(prev_value) != type(curr_value)
+    )
+
+    if values_are_different:
+        print(f"Valore corrente: {curr_value} (tipo: {type(curr_value).__name__})")
+        if prev_value is not None:
+            print(f"Valore precedente: {prev_value} (tipo: {type(prev_value).__name__})")
+
+        if prev_value is not None:
+            g.remove((attribute_uri, predicate, prev_value))
+            g.remove((attribute_uri, PROV.generatedAtTime, None))
+      
+        g.add((attribute_uri, predicate, curr_value))
+        g.add((attribute_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
 # TODO: da rivedere i predicati EX.hasProfileAttribute ed EX.AttributeContextAssessment
 def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, assessment_uri: URIRef, value: object, timestamp: datetime):
@@ -107,8 +119,7 @@ def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, a
         g.add((attribute_uri, EX.attributeProperty, attr_ass_uri))
         add_dimension(g, config["dimension"], attr_ass_uri)
 
-
-    g.add((attribute_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dataTime)))
+    g.add((attribute_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
 def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assessment_uri: URIRef, timestamp: datetime, changed: bool):
     """
@@ -130,7 +141,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
 
         add_attribute_to_profile(g, attr_prof_uri, profile_uri, value, config, timestamp)
 
-        if attr_name in assessment_attributes and not changed:
+        if attr_name in assessment_attributes and changed:
            add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
         
         for i, prov in enumerate(config['access_methods'], start=1):
@@ -236,11 +247,11 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
 
         g.add((assessment_uri, RDF.type, EX.QualityAssessment)) 
         g.add((assessment_uri, PROF.hasProfile, profile_uri))          
-        g.add((assessment_uri, PROV.generateAtTime, Literal(timestamp, datatype=XSD.dateTime)))
+        g.add((assessment_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
         g.add((profile_uri, RDF.type, DCAT.Dataset))
-        g.add((profile_uri, EX.hasAssessment, assessment_uri))  
+        g.add((profile_uri, EX.hasQualityAssessment, assessment_uri))  
 
-        add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, False)
+        add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, True)
         add_metrics(g, row, version_tag, assessment_uri)
     return g

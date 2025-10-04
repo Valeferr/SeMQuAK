@@ -71,9 +71,9 @@ def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
     elif datatype == XSD.boolean:
         sl = s.lower()
         if sl in BOOLEAN_TRUE:
-            return Literal(True, datatype=XSD.boolean)
+            return Literal("True", datatype=XSD.boolean)
         elif sl in BOOLEAN_FALSE:
-            return Literal(False, datatype=XSD.boolean)
+            return Literal("False", datatype=XSD.boolean)
         else:
             return None
         
@@ -107,6 +107,14 @@ def map_http_error(value):
     if code:
         return ERROR[code]
     return None
+
+def check_value(value: object) -> URIRef | object:
+    cleaned = clean_value(value)
+    err_value = map_http_error(value)
+    if err_value is None:
+        return cleaned
+    else:
+        return err_value
 
 def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef, datatype: URIRef =None) -> None:
     """

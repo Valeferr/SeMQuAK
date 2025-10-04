@@ -1,6 +1,7 @@
 from rdflib import Graph, Literal, URIRef
 from pandas import Series
 
+from config.assessment_attributes import assessment_attributes
 from config.profile_attributes import profile_attributes
 from config.namespaces import PROV, XSD
 from config.metrics import metrics 
@@ -42,21 +43,23 @@ def extract_metrics_values(g: Graph, assessment_uri: URIRef) -> list:
 
 def extract_assessment_attribute_values(g: Graph, assessment_uri: URIRef) -> list:
     attributes_query = """
-        PREFIX ex: <http://example.org/>
-        PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX ex: <http://example.org/>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-        SELECT ?attrUri ?pred ?attrValue
-        WHERE {
-            VALUES ?assessment_uri { <%(assessment_uri)s> }
-            ?assessment_uri ex:hasProfileAttribute ?attrUri .
-            ?attrUri ?pred ?attrValue .
-            FILTER( 
-                ?pred NOT IN (rdf:type, ex:attributeProperty, prov:generateAtTime)
-            )
-        }
-    """ % {"assessment_uri": assessment_uri}
-
-    return g.query(attributes_query)
+    SELECT ?attrUri ?pred ?attrValue
+    WHERE {
+        VALUES ?assessment_uri { <%(assessment_uri)s> }
+        ?assessment_uri ex:hasProfileAttribute ?attrUri .
+        ?attrUri ?pred ?attrValue .
+        FILTER( 
+            ?pred NOT IN (rdf:type, ex:attributeProperty, prov:generatedAtTime)
+        )
+    }
+""" % {"assessment_uri": assessment_uri}
+    result = g.query(attributes_query)
+    return [r for r in result]
 
 def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
     """
@@ -79,11 +82,15 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
     for row in attributes_results:
         attr_name = str(row.attrUri.split("/")[-3]).replace("_", " ")
         pred = str(row.pred)
-        if attr_name in profile_attributes:
-            expected_pred = str(profile_attributes[attr_name]["predicate"])
+        if attr_name.endswith("metadata"):
+            attr_name = attr_name.removesuffix("metadata") + "(metadata)"
+        if attr_name.endswith("query"):
+            attr_name = attr_name.removesuffix("query") + "(query)"
+        if attr_name in assessment_attributes:
+            expected_pred = str(assessment_attributes[attr_name]["predicate"])
             if pred == expected_pred:
                 values["attributes"][attr_name] = row.attrValue
-
+    
     return values
 
 def extract_current_values_from_csv(row: Series):

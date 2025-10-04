@@ -5,6 +5,7 @@ import os
 
 from config.metrics import metrics 
 from config.profile_attributes import profile_attributes
+from config.assessment_comparison_criteria import assessment_comparison_criteria
 from config.assessment_attributes import assessment_attributes
 from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
@@ -25,7 +26,6 @@ def load_existing_graph(output_file: str) -> Graph | None:
         print("Nessun grafo esistente da load_existing_graph")
         return None
     
-# TODO: Implementare il confronto con gli assessment e non solo con l'ultimo
 def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_version_tag: str):
     """
     Aggiunge un nuovo assessment al grafo, se estiste almeno una metrica diversa da quella dell' assessment precedente.
@@ -35,68 +35,72 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
     profile_uri = get_profile_uri(kg_id) 
     new_assessment_uri = get_assessment_uri(kg_id, new_version_tag)
 
-    temp_g = Graph()
-
-    temp_g.add((new_assessment_uri, RDF.type, EX.Assessment))
-    temp_g.add((profile_uri, RDF.type, DCAT.Dataset))
-    temp_g.add((profile_uri, EX.hasAssessment, new_assessment_uri))
-    temp_g.add((new_assessment_uri, PROF.hasProfile, profile_uri))
-    temp_g.add((new_assessment_uri, PROV.generateAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
-
-    latest_assessment = get_latest_assessment_for_kg(g, kg_id)
+    assessments = get_all_assessments_for_kg(g, kg_id)
+    matching_assessment = None
     
-    if latest_assessment is not None:
-        print("Trovato assessment precedente")
-        prev_values = extract_assessment_values(g, latest_assessment)
+    if assessments:
+        print(f"\n[{kg_id}] Trovati {len(assessments)} assessment precedenti")
+        for ass in assessments:
+            prev_values = extract_assessment_values(g, ass)
+            if assessments_equal(row, prev_values):
+                matching_assessment = ass
+                break
+        
+        if matching_assessment is not None:
+            print(f"[{kg_id}] Assessment identico trovato - aggiorno solo timestamp e attributi generali del profilo")
+            g.add((matching_assessment, PROV.generatedAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
+            add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, False)
     else:
-        print("Nessun assessment precedente trovato")
+        print(f"\n[{kg_id}] Primo assessment per questo KG")
+    
+    if matching_assessment is None:
+        print(f"[{kg_id}] Creazione nuovo assessment: {new_assessment_uri}")
+        g.add((new_assessment_uri, RDF.type, EX.QualityAssessment))
+        g.add((profile_uri, RDF.type, DCAT.Dataset))
+        g.add((profile_uri, EX.hasQualityAssessment, new_assessment_uri))
+        g.add((new_assessment_uri, PROF.hasProfile, profile_uri))
+        g.add((new_assessment_uri, PROV.generatedAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
+
         prev_values = {'metrics': {}, 'attributes': {}}
+        changed = add_metrics(g, row, new_version_tag, new_assessment_uri, prev_values['metrics'])
+        add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, changed)
+        print(f"[{kg_id}] Assessment aggiunto con successo\n")
 
-    changed = add_metrics(temp_g, row, new_version_tag, new_assessment_uri, prev_values['metrics'])
-    add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, changed)
-    
-    if changed:
-        print("Aggiungo il nuovo assessment al grafo\n\n")
-        g += temp_g
-    else:
-        if (latest_assessment):
-            print("Aggiorno solo la data di generazione dell'assessment precedente\n\n")
-            g.add((latest_assessment, PROV.generateAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
-
-def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, curr_value: object, config: dict, timestamp: datetime):
+def assessments_equal(row, prev_values) -> bool: 
     """
-    Aggiunge o aggiorna un attributo del profilo e la relativa data di generazione
+    Confronta gli attributi chiave per determinare se due assessment sono identici.
+    Restituisce True se sono uguali, altrimenti False 
+    """
+    for attr_name in assessment_comparison_criteria:
+        raw_value = row.get(attr_name)
+        
+        if raw_value is None or pd.isna(raw_value):
+            curr_value = None
+        else:
+            curr_value = check_value(raw_value)
+       
+        prev_value = prev_values["attributes"].get(attr_name)
+        
+        curr_str = str(curr_value) if curr_value else None
+        prev_str = str(prev_value) if prev_value else None
+        
+        if prev_str != curr_str:
+            print(f"  {attr_name} cambiato: {prev_str} -> {curr_str}")
+            return False
+    
+    print(f"  Tutti gli attributi invariati")
+    return True
+
+def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRef, curr_value: object, predicate: URIRef, timestamp: datetime):
+    """
+    Aggiunge o aggiorna un attributo del profilo e la relativa data di generazione.
+    Assume che il valore sia già stato validato dal chiamante.
     """
     g.add((profile_uri, EX.hasAttribute, attribute_uri))
     g.add((attribute_uri, RDF.type, EX.Attribute))
-    predicate = config['predicate']
-    datatype = config["datatype"]
 
-    prev_value = get_attribute_value(g, attribute_uri, predicate)
-
-    error_uri = map_http_error(curr_value)
-    if error_uri:
-        curr_value = error_uri
-    else:
-        curr_value = validate_datatype(curr_value, datatype)
-
-    values_are_different = (
-        prev_value is None or 
-        str(prev_value) != str(curr_value) or
-        type(prev_value) != type(curr_value)
-    )
-
-    if values_are_different:
-        print(f"Valore corrente: {curr_value} (tipo: {type(curr_value).__name__})")
-        if prev_value is not None:
-            print(f"Valore precedente: {prev_value} (tipo: {type(prev_value).__name__})")
-
-        if prev_value is not None:
-            g.remove((attribute_uri, predicate, prev_value))
-            g.remove((attribute_uri, PROV.generatedAtTime, None))
-      
-        g.add((attribute_uri, predicate, curr_value))
-        g.add((attribute_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
+    g.set((attribute_uri, predicate, curr_value))
+    g.set((attribute_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
 # TODO: da rivedere i predicati EX.hasProfileAttribute ed EX.AttributeContextAssessment
 def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, assessment_uri: URIRef, value: object, timestamp: datetime):
@@ -126,7 +130,6 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
     Aggiunge gli attributi del profilo di un KG al grafo.
     """
     kg_id = str(row['KG id']).strip()
-
     for attr_name, config in profile_attributes.items():
         raw_value = row.get(attr_name)
         if raw_value is None:
@@ -138,8 +141,26 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
         
         cleaned_attr_name = clean_identifier(attr_name)
         attr_prof_uri = get_profile_attribute_uri(cleaned_attr_name, kg_id)
+        predicate = config['predicate']
+        datatype = config['datatype']
 
-        add_attribute_to_profile(g, attr_prof_uri, profile_uri, value, config, timestamp)
+        prev_value = get_attribute_value(g, attr_prof_uri, predicate)
+        
+        error_uri = map_http_error(value)
+        curr_value = error_uri if error_uri else validate_datatype(value, datatype)
+        
+        values_are_different = (
+            prev_value is None or 
+            str(prev_value) != str(curr_value)
+        )
+        
+        if values_are_different:
+            add_attribute_to_profile(g, attr_prof_uri, profile_uri, curr_value, predicate, timestamp)
+            
+            if prev_value is None:
+                print(f"  + {attr_name}: {curr_value}")
+            else:
+                print(f"  ~ {attr_name}: {prev_value} -> {curr_value}")
 
         if attr_name in assessment_attributes and changed:
            add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
@@ -164,6 +185,7 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
     """
     kg_id = str(row['KG id']).strip()
     changed = False
+    metrics_added = 0
 
     for metric_name in row.index:
         if metric_name in profile_attributes:
@@ -183,15 +205,20 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
 
             prev_value = pred_values.get(metric_name) if pred_values else None
             if prev_value is None or str(value) != str(prev_value):
-                print(f"Metrica '{metric_name}' cambiata: {prev_value} -> {value}")
+                if prev_value is None:
+                    print(f"  + Metrica '{metric_name}': {value}")
+                else:
+                    print(f"  ~ Metrica '{metric_name}': {prev_value} -> {value}")
                 changed = True
-
+                metrics_added += 1
         else:
             # Aggiungo la metrica sconosciuta con configurazione di default
             datatype = "string"
             access_methods = [UN]
             add_new_metric_to_config(metric_name, datatype)
+            print(f"  ! Metrica sconosciuta '{metric_name}' aggiunta alla configurazione")
             changed = True
+            metrics_added += 1
 
         qa_uri = get_quality_measurement_uri(cleaned_metric_name, kg_id, new_timestamp)
         g.add((assessment_uri, DQV.hasQualityMeasurement, qa_uri))
@@ -209,9 +236,9 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
             add_dimension(g, dimension, metric_uri)
 
     if changed:
-        print("Cambiamenti rilevati")
+        print(f"  Riepilogo: {metrics_added} metriche modificate/aggiunte")
     else:
-        print("Nessuna differenza trovata")
+        print(f"  Nessuna metrica modificata")
 
     return changed
 
@@ -228,7 +255,9 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
     Crea un nuovo grafo da zero partendo dai dati CSV.
     Da usare solo nella prima esecuzione.
     """
-    print("Prima esecuzione: creazione del grafo da zero...")
+    print("=" * 60)
+    print("PRIMA ESECUZIONE: Creazione grafo da zero")
+    print("=" * 60)
     
     g = Graph()
     bind_common_namespaces(g)
@@ -236,14 +265,14 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
     add_categories_and_dimensions_nodes(g)
 
     df = pd.read_csv(filename)
-    for _, row in df.iterrows():
+    print(f"\nElaborazione di {len(df)} Knowledge Graph dal file {filename}\n")
+    
+    for idx, row in df.iterrows():
         kg_id = str(row['KG id']).strip()
         profile_uri = get_profile_uri(kg_id)
-
-        print(f"\nElaboro KG ID: {kg_id}")
-       
         assessment_uri = get_assessment_uri(kg_id, version_tag)
-        print(f"Creo assessment: {assessment_uri}")
+        
+        print(f"[{idx+1}/{len(df)}] Elaborazione KG: {kg_id}")
 
         g.add((assessment_uri, RDF.type, EX.QualityAssessment)) 
         g.add((assessment_uri, PROF.hasProfile, profile_uri))          
@@ -254,4 +283,9 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
 
         add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, True)
         add_metrics(g, row, version_tag, assessment_uri)
+        print()
+    
+    print("=" * 60)
+    print(f"Grafo creato con successo")
+    print("=" * 60)
     return g

@@ -98,12 +98,13 @@ def map_http_error(value):
     """
     Mappa stringhe di errore HTTP a URI di errore predefiniti.
     """
-    if value.isdigit():
+    str_value = str(value)
+    if str_value.isdigit():
         code = int(value)
         if code in ERROR_DEFINITIONS:
             return ERROR[str(code)]
 
-    code = special_mapping.get(value.lower())
+    code = special_mapping.get(str_value.lower())
     if code:
         return ERROR[code]
     return None

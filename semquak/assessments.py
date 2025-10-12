@@ -9,7 +9,7 @@ from config.assessment_comparison_criteria import assessment_comparison_criteria
 from config.assessment_attributes import assessment_attributes
 from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
-from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value, get_latest_assessment_for_kg
+from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value
 from semquak.helpers import add_categories_and_dimensions_nodes, add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_dimension_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
 from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
 

@@ -1,6 +1,5 @@
 """
 Attributi da considerare per determinare se due assessment sono identici.
-Include tutti gli attributi con access_methods che contengono META più lo Sparql endpoint.
 """
 
 assessment_comparison_criteria = [
@@ -16,6 +15,7 @@ assessment_comparison_criteria = [
     "Availability of a common accepted Media Type",
     "Availability of RDF dump (metadata)",
     "Inactive links",
+    "Languages (metadata)",
     "Availability VoID file",
     "Uses RDF structures",
     "Is on a trusted provider list",

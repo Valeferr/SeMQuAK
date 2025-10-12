@@ -4,7 +4,6 @@ import pandas as pd
 from datetime import datetime
 from rdflib import XSD, Graph, Literal, URIRef
 
-from config.metrics import metrics
 from config.errors import ERROR_DEFINITIONS, special_mapping
 from config.namespaces import ERROR
 

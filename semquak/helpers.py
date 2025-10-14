@@ -1,5 +1,6 @@
 from rdflib import Graph, Literal, URIRef
 
+from config.categories import categories
 from config.dimensions import dimensions
 from config.errors import ERROR_DEFINITIONS
 from config.namespaces import EX, PROF, QM, RDFS, SKOS, SPA, META, VO, UN, ERROR, XSD, DQV, DCAT, PROV, OWL, RDF
@@ -80,14 +81,25 @@ def bind_common_namespaces(graph: Graph):
 
 def add_categories_and_dimensions_nodes(g: Graph):
     """
-    Aggiunge i nodi delle categorie delle metriche del grafo
+    Aggiunge i nodi delle categorie e delle dimensioni delle metriche al grafo.
     """
+    for cat_name, config in categories.items():
+        category_uri = get_category_uri(cat_name.replace(" ", "_"))
+        
+        g.add((category_uri, RDF.type, DQV.Category))
+        g.add((category_uri, SKOS.prefLabel, Literal(cat_name, lang="en")))
+        
+        if config.get("definition"):
+            g.add((category_uri, SKOS.definition, Literal(config["definition"], lang="en")))
+
     for dim_name, config in dimensions.items():
         dim_uri = get_dimension_uri(dim_name.replace(" ", "_"))
         category_uri = get_category_uri(config["category"].replace(" ", "_"))
 
         g.add((dim_uri, RDF.type, DQV.Dimension))
         g.add((dim_uri, SKOS.prefLabel, Literal(dim_name, lang="en")))
-        g.add((dim_uri, SKOS.definition, Literal(config["definition"], lang="en")))
+        if config.get("definition"):
+            g.add((dim_uri, SKOS.definition, Literal(config["definition"], lang="en")))
+        
         g.add((dim_uri, DQV.inCategory, category_uri))
     

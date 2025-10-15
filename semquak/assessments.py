@@ -11,7 +11,7 @@ from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
 
 from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value
 from semquak.helpers import add_categories_and_dimensions_nodes, add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_dimension_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
-from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype
+from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype, safe_kg_id
 
 def load_existing_graph(output_file: str) -> Graph | None:
     """
@@ -31,7 +31,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
     Aggiunge un nuovo assessment al grafo, se estiste almeno una metrica diversa da quella dell' assessment precedente.
     Se tutte le metriche sono uguali, aggiorna solo la data di generazione dell'assessment uguale.
     """
-    kg_id = str(row['KG id']).strip()
+    kg_id = safe_kg_id(row['KG id'])
     profile_uri = get_profile_uri(kg_id) 
     new_assessment_uri = get_assessment_uri(kg_id, new_version_tag)
 
@@ -126,7 +126,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
     """
     Aggiunge gli attributi del profilo di un KG al grafo.
     """
-    kg_id = str(row['KG id']).strip()
+    kg_id = safe_kg_id(row['KG id'])
     for attr_name, config in profile_attributes.items():
         raw_value = row.get(attr_name)
         if raw_value is None:
@@ -184,7 +184,7 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
             - True se sono state rilevate differenze o aggiunte nuove metriche
             - False se NON ci sono differenze rispetto all'assessment precedente
     """
-    kg_id = str(row['KG id']).strip()
+    kg_id = safe_kg_id(row['KG id'])
     changed = False
     metrics_added = 0
 
@@ -269,7 +269,7 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
     print(f"\nElaborazione di {len(df)} Knowledge Graph dal file {filename}\n")
     
     for idx, row in df.iterrows():
-        kg_id = str(row['KG id']).strip()
+        kg_id = safe_kg_id(row['KG id'])
         profile_uri = get_profile_uri(kg_id)
         assessment_uri = get_assessment_uri(kg_id, version_tag)
         

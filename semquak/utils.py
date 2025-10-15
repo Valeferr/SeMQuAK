@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 import pandas as pd
+import re
 
 from datetime import datetime
 from rdflib import XSD, Graph, Literal, URIRef
@@ -91,7 +92,22 @@ def clean_identifier(s: str) -> str:
     """
     Rimuove caratteri non ammessi negli identificatori RDF.
     """
-    return s.replace(' ', '_').replace('.', '_').replace('-', '_').replace('/', '_').replace('(', '').replace(')', '')
+    return s.replace(' ', '_').replace('.', '_').replace('-', '_').replace('/', '_').replace('(', '').replace(')', '').strip()
+
+def safe_kg_id(kg_id: str) -> str:
+    """
+    Pulisce un KG ID rimuovendo prefissi URL e caratteri non ammessi.
+    """
+    if not isinstance(kg_id, str):
+        kg_id = str(kg_id)
+
+    kg_id = kg_id.replace("https", "").replace("http", "")
+    kg_id = re.sub(r'[^a-zA-Z_\-]', '_', kg_id)
+    kg_id = re.sub(r'-+', '', kg_id)
+    kg_id = re.sub(r'_+', '_', kg_id)
+    kg_id = kg_id.strip('_')
+
+    return clean_identifier(kg_id)
 
 def map_http_error(value):
     """

@@ -810,4 +810,16 @@ metrics = {
 		"dimension": "",
 	},
 
+	"Number of entities counted with regex": {
+		"datatype": XSD.string,
+		"access_methods": [UN],
+		"dimension": "",
+	},
+
+	"Url file VoID": {
+		"datatype": XSD.string,
+		"access_methods": [UN],
+		"dimension": "",
+	},
+
 }

@@ -8,7 +8,7 @@ from rdflib import VOID
 
 profile_attributes = {
     "KG id": {
-        "predicate": DCTERMS.identifier,
+        "predicate": DCAT.identifier,
         "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Understanbility",

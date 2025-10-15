@@ -48,8 +48,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
         
         if matching_assessment is not None:
             print(f"[{kg_id}] Assessment identico trovato - aggiorno solo timestamp e attributi generali del profilo")
-            g.add((matching_assessment, PROV.generatedAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
-            add_profile_attributes(g, row, profile_uri, new_assessment_uri, new_timestamp, False)
+            add_profile_attributes(g, row, profile_uri, matching_assessment, new_timestamp, False)
     else:
         print(f"\n[{kg_id}] Primo assessment per questo KG")
     
@@ -102,8 +101,7 @@ def add_attribute_to_profile(g: Graph, attribute_uri: URIRef, profile_uri: URIRe
     g.set((attribute_uri, predicate, curr_value))
     g.set((attribute_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
-# TODO: da rivedere i predicati EX.hasProfileAttribute ed EX.AttributeContextAssessment
-def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, assessment_uri: URIRef, value: object, timestamp: datetime):
+def add_attribute_to_assessment(g: Graph, attr_name: str, config: dict, attribute_uri: URIRef, assessment_uri: URIRef, value: object, timestamp: datetime):
     """
     Collega l'attributo all'assessment e aggiorna il valore nel contesto dell'assessment
     """
@@ -113,7 +111,6 @@ def add_attribute_to_assessment(g: Graph, config: dict, attribute_uri: URIRef, a
     g.add((attribute_uri, RDF.type, EX.AttributeContextAssessment))
     
     safe_literal(g, value, config["predicate"], attribute_uri, datatype=XSD.string)
-    attr_name = attribute_uri.split('/')[-3]
     for i, prov in enumerate(config['access_methods'], start=1):
         attr_ass_uri = URIRef(PROF[f"attribute/{attr_name}_{i}/{version_tag}"])
         g.add((attr_ass_uri, RDF.type, RDF.Property))
@@ -148,6 +145,10 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
         
         error_uri = map_http_error(value)
         curr_value = error_uri if error_uri else validate_datatype(value, datatype)
+
+        if curr_value is None:
+            print(f"  ! Attributo '{attr_name}' saltato: valore non valido ({value})")
+            continue
         
         values_are_different = (
             prev_value is None or 
@@ -163,7 +164,7 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
                 print(f"  ~ {attr_name}: {prev_value} -> {curr_value}")
 
         if attr_name in assessment_attributes and changed:
-           add_attribute_to_assessment(g, config, attr_prof_uri, assessment_uri, value, timestamp)
+           add_attribute_to_assessment(g, cleaned_attr_name, config, attr_prof_uri, assessment_uri, value, timestamp)
         
         for i, prov in enumerate(config['access_methods'], start=1):
             attr_uri = URIRef(f"{get_attribute_uri(cleaned_attr_name)}_{i}")
@@ -283,7 +284,6 @@ def first_interaction(timestamp: datetime, version_tag: str, filename: str) -> G
 
         add_profile_attributes(g, row, profile_uri, assessment_uri, timestamp, True)
         add_metrics(g, row, version_tag, assessment_uri)
-        print()
     
     print("=" * 60)
     print(f"Grafo creato con successo")

@@ -22,4 +22,5 @@ assessment_comparison_criteria = [
     "Presence of example",
     "metadata-media-type",
     "Serialization formats",
+    "Availability for download (metadata)",
 ]

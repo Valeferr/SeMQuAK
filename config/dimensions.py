@@ -1,4 +1,9 @@
 dimensions = {
+    "": {
+        "category": "Uncategorized",
+        "definition": "",
+    },
+
     "Availability": {
         "category": "Accessibility",
         "definition": "",

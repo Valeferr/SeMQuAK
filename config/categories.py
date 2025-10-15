@@ -1,4 +1,8 @@
 categories = {
+    "Uncategorized": {
+        "definition": "",
+    },
+
     "Accessibility": {
         "definition": "",
     },

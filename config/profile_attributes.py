@@ -112,6 +112,13 @@ profile_attributes = {
         "dimension": "Availability",
     },
 
+    "Availability for download (metadata)": {
+        "predicate": EX.availabilityForDownload,
+        "datatype": XSD.boolean,
+        "access_methods": [META],
+        "dimension": "Availability",
+    },
+
     "Author (query)": {
         "predicate": DCTERMS.creator,
         "datatype": XSD.string,
@@ -128,7 +135,7 @@ profile_attributes = {
 
     "License machine redeable (metadata)": {
         "predicate": DCTERMS.license,
-        "datatype": XSD.anyURI,
+        "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Licensing",
     },

@@ -9,7 +9,7 @@ from config.namespaces import ERROR
 
 INVALID_VALUES = {
         "none", "nan", "null","", "-", "absent", "[]", "{}",
-        "void file absent", "\"\"", "''", " ", "[\'\']"
+        "void file absent", "\"\"", "''", " ", "[\'\']", "[\'\'. \'\']"
 }
 
 BOOLEAN_TRUE = {"true", "1", "yes", "on"}
@@ -28,7 +28,7 @@ def extract_timestamp_from_filename(filename: str) -> datetime:
     """
     Estrae la data dal nome del file CSV.
     """
-    filename = filename.replace("dati_prova/", "").replace(".csv", "").split("-")
+    filename = filename.replace("data/", "").replace(".csv", "").split("-")
     return datetime(int(filename[0]), int(filename[1]), int(filename[2]))
 
 def clean_value(value: object) -> str | None:
@@ -38,7 +38,7 @@ def clean_value(value: object) -> str | None:
     if pd.isna(value) or str(value).strip().lower() in INVALID_VALUES:
         return None
     s = str(value).strip()
-    return s.replace(',', '.')
+    return s.replace(',', '.').replace("\"\"", "").replace("''", "")
 
 def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
     """
@@ -158,7 +158,7 @@ def add_new_metric_to_config(metric_name, datatype: str="string", access_methods
 
     print(f"Metrica sconosciuta '{metric_name}', l'aggiungo.")
     pos = content.rfind("}")
-    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods}\n\t\t"dimension": "",\n\t"}},\n\n'
+    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods},\n\t\t"dimension": "",\n\t}},\n\n'
     new_content = content[:pos] + new_entry + content[pos:]
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

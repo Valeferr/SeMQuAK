@@ -39,7 +39,9 @@ def clean_value(value: object) -> str | None:
     if pd.isna(value) or str(value).strip().lower() in INVALID_VALUES:
         return None
     s = str(value).strip()
-    return s.replace(',', '.').replace("\"\"", "").replace("''", "")
+    if re.match(r'^[+-]?\d+,\d+$', s):
+        s = s.replace(",", ".")
+    return s.replace("\"\"", "").replace("''", "")
 
 def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
     """
@@ -102,7 +104,7 @@ def safe_kg_id(kg_id: str) -> str:
         kg_id = str(kg_id)
 
     kg_id = kg_id.replace("https", "").replace("http", "")
-    kg_id = re.sub(r'[^a-zA-Z_\-]', '_', kg_id)
+    kg_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', kg_id)
     kg_id = re.sub(r'-+', '', kg_id)
     kg_id = re.sub(r'_+', '_', kg_id)
     kg_id = kg_id.strip('_')
@@ -174,7 +176,7 @@ def add_new_metric_to_config(metric_name, datatype: str="string", access_methods
 
     print(f"Metrica sconosciuta '{metric_name}', l'aggiungo.")
     pos = content.rfind("}")
-    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods},\n\t\t"dimension": "",\n\t}},\n\n'
+    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods},\n\t\t"dimension": "Uncategorized",\n\t}},\n\n'
     new_content = content[:pos] + new_entry + content[pos:]
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

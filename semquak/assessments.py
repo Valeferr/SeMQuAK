@@ -49,6 +49,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
         if matching_assessment is not None:
             print(f"[{kg_id}] Assessment identico trovato - aggiorno solo timestamp e attributi generali del profilo")
             add_profile_attributes(g, row, profile_uri, matching_assessment, new_timestamp, False)
+            g.add((matching_assessment, PROV.generatedAtTime, Literal(new_timestamp, datatype=XSD.dateTime)))
     else:
         print(f"\n[{kg_id}] Primo assessment per questo KG")
     
@@ -73,15 +74,18 @@ def assessments_equal(row, prev_values) -> bool:
     for attr_name in assessment_comparison_criteria:
         raw_value = row.get(attr_name)
         
-        if raw_value is None or pd.isna(raw_value):
-            curr_value = None
-        else:
-            curr_value = check_value(raw_value)
-       
+        curr_value = None if raw_value is None or pd.isna(raw_value) else check_value(raw_value)
         prev_value = prev_values["attributes"].get(attr_name)
-        
-        curr_str = str(curr_value) if curr_value else None
-        prev_str = str(prev_value) if prev_value else None
+
+        def normalize(v):
+            if v is None:
+                return ""
+            s = str(v).strip()
+            s = s.replace("'", '"').replace(" ", "")
+            return s
+
+        curr_str = normalize(curr_value)
+        prev_str = normalize(prev_value)
         
         if prev_str != curr_str:
             print(f"  {attr_name} cambiato: {prev_str} -> {curr_str}")

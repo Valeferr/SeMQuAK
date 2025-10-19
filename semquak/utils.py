@@ -53,10 +53,11 @@ def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
         return None
     
     if datatype == XSD.anyURI:
-        parsed = urlparse(s)
-        if parsed.scheme and parsed.netloc:
+        if is_valid_uri(s):
             return URIRef(s)
-        return None
+        else:
+            print(f"URI non valido scartato: {s}")
+            return None
         
     elif datatype == XSD.integer:
         try:
@@ -184,3 +185,20 @@ def add_new_metric_to_config(metric_name, datatype: str="string", access_methods
 
     added_metrics.append(metric_name)
     print(f"Metrica '{metric_name}' aggiunta\n\n")
+
+def is_valid_uri(uri: str) -> bool:
+    """
+    Controlla se una stringa è un URI valido secondo le regole RDF/Turtle.
+    """
+    if not isinstance(uri, str) or not uri.strip():
+        return False
+    
+    parsed = urlparse(uri)
+    if not (parsed.scheme and parsed.netloc):
+        return False
+
+    invalid_chars = r' <>\"{}|\\^`’“”‘›‹'
+    if any(ch in uri for ch in invalid_chars):
+        return False
+
+    return True

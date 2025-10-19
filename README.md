@@ -1,11 +1,11 @@
-# SeMQuAK – Semantic Modeling of Knowledge Graph Quality
+# SeMQuaK – Semantic Modeling of Knowledge Graph Quality
 
 ---
 
 ## Struttura del progetto
 
 ```text
-SeMQuAK/
+SeMQuaK/
 │
 ├── config/                     # Definizioni statiche, costanti e mapping
 │   ├── __init__.py

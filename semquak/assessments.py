@@ -3,6 +3,7 @@ from datetime import datetime
 import pandas as pd
 import os
 
+from config.black_list import black_list
 from config.metrics import metrics 
 from config.profile_attributes import profile_attributes
 from config.assessment_comparison_criteria import assessment_comparison_criteria
@@ -37,7 +38,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
 
     assessments = get_all_assessments_for_kg(g, kg_id)
     matching_assessment = None
-    
+
     if assessments:
         print(f"\n[{kg_id}] Trovati {len(assessments)} assessment precedenti")
         for ass in assessments:
@@ -201,6 +202,10 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
             continue
 
         cleaned_metric_name = clean_identifier(metric_name)
+        
+        if metric_name in black_list:
+            print(f"  - Metrica '{metric_name}' nella black list, salto l'aggiunta")
+            continue
 
         if metric_name in metrics:
             config = metrics[metric_name]

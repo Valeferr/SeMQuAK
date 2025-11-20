@@ -12,7 +12,7 @@ from config.namespaces import EX, PROF, DQV, PROV, DCAT, RDFS, RDF, UN, XSD, SKO
 
 from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value
 from semquak.helpers import add_categories_and_dimensions_nodes, add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_dimension_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
-from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype, safe_kg_id
+from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, normalize_string, safe_literal, validate_datatype, safe_kg_id
 
 # TODO: Implement support for parsing unknown metrics via CLI arguments.
 
@@ -81,15 +81,8 @@ def assessments_equal(row, prev_values) -> bool:
         curr_value = None if raw_value is None or pd.isna(raw_value) else check_value(raw_value)
         prev_value = prev_values["attributes"].get(attr_name)
 
-        def normalize(v):
-            if v is None:
-                return ""
-            s = str(v).strip()
-            s = s.replace("'", '"').replace(" ", "")
-            return s
-
-        curr_str = normalize(curr_value)
-        prev_str = normalize(prev_value)
+        curr_str = normalize_string(curr_value)
+        prev_str = normalize_string(prev_value)
         
         if prev_str != curr_str:
             print(f"  {attr_name} cambiato: {prev_str} -> {curr_str}")

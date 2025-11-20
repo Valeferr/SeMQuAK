@@ -43,6 +43,12 @@ def clean_value(value: object) -> str | None:
         s = s.replace(",", ".")
     return s.replace("\"\"", "").replace("''", "")
 
+def normalize_string(v: any) -> str:
+    """Normalizza una stringa per il confronto."""
+    if v is None:
+        return ""
+    return str(v).strip().replace("'", '"').replace(" ", "")
+
 def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
     """
     Converte un valore stringa in un Literal RDF con tipo corretto.
@@ -135,7 +141,7 @@ def check_value(value: object) -> URIRef | object:
     else:
         return err_value
 
-def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef, datatype: URIRef =None) -> None:
+def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef, datatype: URIRef = None) -> None:
     """
     Aggiunge una triple con valore validato, gestendo errori e tipi.
     """
@@ -157,7 +163,7 @@ def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef
     else:
         print(f"Warning: Non posso validare '{cleaned}' come {datatype} per {subject_uri} -> {predicate}")
 
-def add_new_metric_to_config(metric_name, datatype: str="string", access_methods="[UN]"):
+def add_new_metric_to_config(metric_name, datatype: str="string", access_methods="[UN]", dimension: str="Uncategorized", output_metric: str="", description: str="") -> None:
     """
     Aggiunge una nuova metrica al file metrics.py che non esiste
     """    
@@ -177,7 +183,7 @@ def add_new_metric_to_config(metric_name, datatype: str="string", access_methods
 
     print(f"Metrica sconosciuta '{metric_name}', l'aggiungo.")
     pos = content.rfind("}")
-    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods},\n\t\t"dimension": "Uncategorized",\n\t}},\n\n'
+    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods},\n\t\t"dimension": {dimension}",\n\t}},\n\n'
     new_content = content[:pos] + new_entry + content[pos:]
 
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:

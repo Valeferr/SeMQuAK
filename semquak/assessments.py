@@ -8,11 +8,13 @@ from config.metrics import metrics
 from config.profile_attributes import profile_attributes
 from config.assessment_comparison_criteria import assessment_comparison_criteria
 from config.assessment_attributes import assessment_attributes
-from config.namespaces import EX, PROF, QM, DQV, PROV, DCAT, RDFS, RDF, UN, XSD
+from config.namespaces import EX, PROF, DQV, PROV, DCAT, RDFS, RDF, UN, XSD, SKOS
 
 from semquak.extractors import extract_assessment_values, get_all_assessments_for_kg, get_attribute_value
 from semquak.helpers import add_categories_and_dimensions_nodes, add_distribution_and_errors_nodes, bind_common_namespaces, get_assessment_uri, get_attribute_uri, get_dimension_uri, get_metric_uri, get_profile_attribute_uri, get_profile_uri, get_quality_measurement_uri
 from semquak.utils import add_new_metric_to_config, check_value, clean_identifier, clean_value, map_http_error, safe_literal, validate_datatype, safe_kg_id
+
+# TODO: Implement support for parsing unknown metrics via CLI arguments.
 
 def load_existing_graph(output_file: str) -> Graph | None:
     """
@@ -39,6 +41,7 @@ def add_new_assessment(g: Graph, row: pd.Series, new_timestamp: datetime, new_ve
     assessments = get_all_assessments_for_kg(g, kg_id)
     matching_assessment = None
 
+    # TODO: Implement logic to check for duplicate files and ensure new file timestamp is not older than existing entries.
     if assessments:
         print(f"\n[{kg_id}] Trovati {len(assessments)} assessment precedenti")
         for ass in assessments:
@@ -178,6 +181,12 @@ def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assess
             target_uri = prov if isinstance(prov, URIRef) else URIRef(prov)
             g.add((attr_uri, EX.ComputedOver, target_uri))
             g.add((attr_prof_uri, EX.attributeProperty, attr_uri))
+            metric_output = config.get("metric_output")
+            description = config.get("description")
+            if metric_output:  
+                g.add((attr_uri, EX.metricOutput, Literal(metric_output, lang="en")))
+            if description:
+                g.add((attr_uri, SKOS.prefLabel, Literal(description, lang="en")))
             add_dimension(g, config["dimension"], attr_uri)
 
 def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: URIRef, pred_values: dict | None = None) -> bool:
@@ -201,17 +210,19 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
         if value is None:
             continue
 
-        cleaned_metric_name = clean_identifier(metric_name)
-        
         if metric_name in black_list:
-            print(f"  - Metrica '{metric_name}' nella black list, salto l'aggiunta")
+            print(f"\t- Metrica '{metric_name}' nella black list, salto l'aggiunta")
             continue
 
+        cleaned_metric_name = clean_identifier(metric_name)
+        
         if metric_name in metrics:
             config = metrics[metric_name]
             datatype = config['datatype']
             access_methods = config['access_methods']
             dimension = config["dimension"].replace(" ", "_")
+            description = config.get("description", "")
+            output_metric = config.get("metric_output", "")
 
             prev_value = pred_values.get(metric_name) if pred_values else None
             if prev_value is None or str(value) != str(prev_value):
@@ -222,10 +233,13 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
                 changed = True
                 metrics_added += 1
         else:
-            # Aggiungo la metrica sconosciuta con configurazione di default
+            # Register unknown metrics with default configuration.
             datatype = "string"
             access_methods = [UN]
-            add_new_metric_to_config(metric_name, datatype)
+            dimension = "Uncategorized"
+            output_metric = ""
+            description = ""
+            add_new_metric_to_config(metric_name, datatype, dimension, output_metric, description)
             print(f"  ! Metrica sconosciuta '{metric_name}' aggiunta alla configurazione")
             changed = True
             metrics_added += 1
@@ -243,6 +257,10 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
             target_uri = prov if isinstance(prov, URIRef) else URIRef(prov)
             g.add((metric_uri, EX.ComputedOver, target_uri))
             g.add((qa_uri, DQV.isMeasurementOf, metric_uri))
+            if description != "":
+                g.add((metric_uri, SKOS.prefLabel, Literal(description, lang="en")))
+            if output_metric != "":
+                g.add((metric_uri, EX.metricOutput, Literal(output_metric, lang="en")))
             add_dimension(g, dimension, metric_uri)
 
     if changed:

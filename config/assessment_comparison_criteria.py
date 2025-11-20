@@ -20,7 +20,8 @@ assessment_comparison_criteria = [
     "Uses RDF structures",
     "Is on a trusted provider list",
     "Presence of example",
-    "metadata-media-type",
+    #"metadata-media-type",
     "Serialization formats",
     "Availability for download (metadata)",
+    "Degree of connection",
 ]

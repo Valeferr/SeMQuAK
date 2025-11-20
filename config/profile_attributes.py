@@ -8,10 +8,12 @@ from rdflib import VOID
 
 profile_attributes = {
     "KG id": {
-        "predicate": DCAT.identifier,
+        "predicate": DCTERMS.identifier,
         "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Understanbility",
+        "metric_output": "",
+        "description": "",
     },
 
     "KG name": {
@@ -19,20 +21,17 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [SPA],
         "dimension": "Understanbility",
+        "metric_output": "",
+        "description": "",
     },
 
     "Description": {
         "predicate": DCTERMS.description,
         "datatype": XSD.string,
         "access_methods": [SPA],
-        "dimension": "Understanbility",
-    },
-
-    "Languages (metadata)": {
-        "predicate": DCTERMS.language,
-        "datatype": XSD.string,
-        "access_methods": [META],
-        "dimension": "Versatility",
+        "dimension": "Believability",
+        "metric_output": "",
+        "description": "",
     },
 
     "Offline dumps": {
@@ -40,48 +39,44 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Availability",
+        "metric_output": "",
+        "description": "",
     },
 
     "Vocabularies": {
         "predicate": VOID.vocabulary,
         "datatype": XSD.string,
         "access_methods": [SPA, VO],
-        "dimension": "Verifiability",
-    },
-
-    "Contributor": {
-        "predicate": DCTERMS.contributor,
-        "datatype": XSD.string,
-        "access_methods": [META],
-        "dimension": "Verifiability",
+        "dimension": "Understandability",
+        "metric_output": "[]: if the vocabularies used are not indicated; -: the SPARQL endpoint is missing; list of vocabularies: if the vocabularies used are indicated.",
+        "description": "checking whether a list of vocabularies used in the dataset is provided",
     },
 
     "URL for download the dataset": {
         "predicate": VOID.dataDump,
         "datatype": XSD.string,
         "access_methods": [META, SPA, VO],
-        "dimension": "Availability",
+        "dimension": "Versatility",
+        "metric_output": "[]: if the sparql endpoint or rdf dump is not online;  list of links: if SPARQL endpoint and RDF dump are online.",
+        "description": "Checking whether the data is available as a SPARQL endpoint and is available for download as an RDF dump",
+    },
+
+    "Dataset update frequency": {
+        "predicate": EX.datasetUpdateFrequency,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Timeliness",
+        "metric_output": "[]: the update frequency is not indicated; -: the SPARQL endpoint is missing; list of strings: the update frequency is indicated.",
+        "description": "it corresponds to the 'stating the [...] frequency of data validation"
     },
 
     "External links": {
         "predicate": EX.hasExternalLinks,
         "datatype": XSD.string,
         "access_methods": [SPA],
-        "dimension": "Availability",
-    },
-
-    "Dataset update frequency": {
-        "predicate": EX.accrualPeriodicity,
-        "datatype": XSD.string,
-        "access_methods": [META],
-        "dimension": "",
-    },
-
-    "Sources": {
-        "predicate": DCTERMS.source,
-        "datatype": XSD.string,
-        "access_methods": [META],
-        "dimension": "Availability",
+        "dimension": "Interlinking",
+        "metric_output": "",
+        "description": "",
     },
 
     "Publisher": {
@@ -89,6 +84,8 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [SPA],
         "dimension": "Verifiability",
+        "metric_output": "[]: if the publisher is not indicated; -: the SPARQL endpoint is missing; list of publishers: if the publisher is indicated.",
+        "description": "stating the author and his contributors, the publisher of the data and its sources",
     },
 
     "Dataset URL": {
@@ -96,6 +93,8 @@ profile_attributes = {
         "datatype": XSD.anyURI,
         "access_methods": [SPA],
         "dimension": "Availability",
+        "metric_output": "url: the dataset url; absent: if the dataset url can't be retrieved",
+        "description": "Dataset URL"
     },
 
     "Sparql endpoint": {
@@ -103,34 +102,17 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [SPA],
         "dimension": "Availability",
+        "metric_output": "Offline: if the sparql endpoint is not online;  Available: if SPARQL endpoint is online.; -:The SPARQL endpoint is missing.",
+        "description": "Checking whether the server responds to a SPARQL query",
     },
 
     "SPARQL endpoint URL": {
         "predicate": DCAT.endpointURL,
         "datatype": XSD.anyURI,
         "access_methods": [SPA],
-        "dimension": "Availability",
-    },
-
-    "Availability for download (metadata)": {
-        "predicate": EX.availabilityForDownload,
-        "datatype": XSD.boolean,
-        "access_methods": [META],
-        "dimension": "Availability",
-    },
-
-    "Author (query)": {
-        "predicate": DCTERMS.creator,
-        "datatype": XSD.string,
-        "access_methods": [SPA],
-        "dimension": "Verifiability",
-    },
-
-    "Author (metadata)": {
-        "predicate": DCTERMS.creator,
-        "datatype": XSD.string,
-        "access_methods": [META],
-        "dimension": "Verifiability",
+        "dimension": "Versatility",
+        "metric_output": "",
+        "description": "",
     },
 
     "License machine redeable (metadata)": {
@@ -138,6 +120,8 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Licensing",
+        "metric_output": "string: the license if it can be recovered; False: the license is not indicated",
+        "description": "detection of the indication of a license in the VoID description or in the dataset itself",
     },
 
     "License machine redeable (query)": {
@@ -145,6 +129,8 @@ profile_attributes = {
         "datatype": XSD.anyURI,
         "access_methods": [SPA],
         "dimension": "Licensing",
+        "metric_output": "string: the license if it can be recovered; -: the license is not indicated or the SPARQL endpoint is missing.",
+        "description": "detection of the indication of a license in the VoID description or in the dataset itself",
     },
 
     "License human redeable": {
@@ -152,6 +138,8 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [SPA],
         "dimension": "Licensing",
+        "metric_output": "True: the human readable license is indicated; False: the human readable license is not indicated; -: The SPARQL endpoint is missing.",
+        "description": "Detection of a license in the documentation of the dataset",
     },
 
     "Use HTTPS": {
@@ -159,6 +147,8 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [SPA],
         "dimension": "Security",
+        "metric_output": "False: Does not use HTTPS; True: Uses HTTPS; -: The SPARQL endpoint is missing.",
+        "description": "HTTPS support",
     },
 
     "Requires authentication": {
@@ -166,6 +156,8 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [META],
         "dimension": "Security",
+        "metric_output": "False: Authentication is not required; True: authentication required; -: The SPARQL endpoint is missing.",
+        "description": "use of login credentials (or use of SSL or SSH)",
     },
 
     "Availability of a common accepted Media Type": {
@@ -173,20 +165,26 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [META],
         "dimension": "Availability",
+        "metric_output": "True: if at least one commonly accepted serialization format is provided; False: if no commonly accepted serialization format is provided; No dump available: if no dump is available;",
+        "description": "checking whether data is available in a rdf serialization format that is commonly accepted",
     },
 
     "Availability of RDF dump (query)": {
         "predicate": VOID.dataDump,
-        "datatype": XSD.decimal,
+        "datatype": XSD.string,
         "access_methods": [SPA, VO],
         "dimension": "Versatility",
+        "metric_output": "False: The RDF dump is offline;  True: The RDF dump is online. -: The RDF dump is missing.",
+        "description": "Checking whether an RDF dump is provided and can be downloaded",
     },
 
     "Availability of RDF dump (metadata)": {
         "predicate": VOID.dataDump,
-        "datatype": XSD.boolean,
+        "datatype": XSD.string,
         "access_methods": [META, VO],
         "dimension": "Versatility",
+        "metric_output": "0: The RDF dump is offline;  1: The RDF dump is online. -1: The RDF dump is missing.",
+        "description": "Checking whether an RDF dump is provided and can be downloaded",
     },
 
     "Inactive links": {
@@ -194,6 +192,8 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [META],
         "dimension": "Availability",
+        "metric_output": "",
+        "description": "",
     },
 
     "Availability for download (query)" : {
@@ -201,13 +201,44 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [SPA],
         "dimension": "Availability",
+        "metric_output": "False: The RDF dump is offline;  True: The RDF dump is online. -: The RDF dump is missing.",
+        "description": "Checking whether an RDF dump is provided and can be downloaded",
     },
+
+    "Author (metadata)": {
+        "predicate": DCTERMS.creator,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Verifiability",
+        "metric_output": "False: if the author is not indicated; string with authors: if the author is indicated.",
+        "description": "stating the author and his contributors, the publisher of the data and its sources",
+    },
+
+    "Sources": {
+        "predicate": DCTERMS.source,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Verifiability",
+        "metric_output": "string: the website, the name and the email of the source; False: if the sources are not indicated.",
+        "description": "stating the author and his contributors, the publisher of the data and its sources",
+    },
+
+    "Availability for download (metadata)": {
+        "predicate": EX.availabilityForDownload,
+		"datatype": XSD.string,
+		"access_methods": [META],
+		"dimension": "Availability",
+        "metric_output": "0: The RDF dump is offline;  1: The RDF dump is online. -1: The RDF dump is missing.",
+        "description": "Checking whether an RDF dump is provided and can be downloaded",
+	},
 
     "Availability VoID file": {
         "predicate": EX.availabilityVoIDFile,
         "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Availability",
+        "metric_output": "",
+        "description": "",
     },
 
     "Uses RDF structures": {
@@ -215,6 +246,8 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [META],
         "dimension": "Interpretability",
+        "metric_output": "",
+        "description": "",
     },
 
     "Ontology Hijacking problem": {
@@ -222,13 +255,17 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [SPA],
         "dimension": "Consistency",
+        "metric_output": "True: if ontology hijacking problem is detected; False: if ontology hijacking problem is not detected; -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
+        "description": "detection of the redefinition by third parties of external classes/ properties such that reasoning over data using those external terms is affected",
     },
 
     "Limited": {
         "predicate": EX.isLimited,
         "datatype": XSD.boolean,
         "access_methods": [SPA],
-        "dimension": "",
+        "dimension": "Unknown",
+        "metric_output": "",
+        "description": "",
     },
 
     "Is on a trusted provider list": {
@@ -236,13 +273,17 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [META],
         "dimension": "Believability",
+        "metric_output": "boolean: true if the provider is trusted; false: if the provider is not trusted",
+        "description": "checking whether the provider/contributor is contained in a list of trusted providers",
     },
 
     "Age of data": {
         "predicate": DCTERMS.created,
-        "datatype": XSD.boolean,
+        "datatype": XSD.string,
         "access_methods": [SPA, VO],
         "dimension": "Currency",
+        "metric_output": "-: if the creation date can't be recovered; integer: if the creation date is correctly recovered",
+        "description": "current time - created time",
     },
 
     "Presence of example": {
@@ -250,13 +291,17 @@ profile_attributes = {
         "datatype": XSD.boolean,
         "access_methods": [META],
         "dimension": "Understandability",
+        "metric_output": "False: if examples are not provided; True: if examples are provided.",
+        "description": "detecting whether examples of SPARQL queries are provided",
     },
 
     "metadata-media-type": {
         "predicate": DCAT.mediaType,
         "datatype": XSD.string,
         "access_methods": [META],
-        "dimension": "",
+        "dimension": "Versatility",
+        "metric_output": "[]: if no serialization format is provided; list of serialization formats: if at least one serialization format is provided",
+        "description": "checking whether data is available in different serialization formats",
     },
 
     "Languages (query)": {
@@ -264,6 +309,8 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [SPA],
         "dimension": "Versatility",
+        "metric_output": "False: if no lang tag is retrieved; list of langs: if at least a lang tag is retrieved; -: if the SPARQL endpoint is missing.",
+        "description": "Checking whether data is available in different languages",
     },
 
     "Serialization formats": {
@@ -271,5 +318,26 @@ profile_attributes = {
         "datatype": XSD.string,
         "access_methods": [META],
         "dimension": "Versatility",
+        "metric_output": "[]: if no serialization format is provided; list of serialization formats: if at least one serialization format is provided; -: if the SPARQL endpoint is missing.",
+        "description": "checking whether data is available in different serialization formats",
     },
+    
+	"Languages (metadata)": {
+        "predicate": DCTERMS.language,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Versatility",
+        "metric_output": "absent: if no lang is indicated in the metadata; list of langs: if at least a lang tag is retrieved",
+        "description": "Checking whether metadata is available in different languages",
+    },
+
+    "Contributor": {
+        "predicate": DCTERMS.contributor,
+        "datatype": XSD.string,
+        "access_methods": [META],
+        "dimension": "Verifiability",
+        "metric_output": "[]: if the contributors is not indicated; -: the SPARQL endpoint is missing; list of contributors: if the contributors is indicated.",
+        "description": "stating the author and his contributors, the publisher of the data and its sources",
+    },
+
 }

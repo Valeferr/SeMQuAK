@@ -12,7 +12,7 @@ ERROR_DEFINITIONS = {
     524: "HTTP Error 524: unknown",
 }
 
-special_mapping = {
+SPECIAL_MAPPING = {
     "impossible to verify": "403",
     "unable to retrieve properties from the endpoint": "404",
     "unable to retrieve classes from the endpoint": "404",

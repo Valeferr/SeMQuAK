@@ -1,11 +1,12 @@
 from urllib.parse import urlparse
 import pandas as pd
 import re
-
+from pathlib import Path
+import sys
 from datetime import datetime
 from rdflib import XSD, Graph, Literal, URIRef
 
-from config.errors import ERROR_DEFINITIONS, special_mapping
+from config.errors import ERROR_DEFINITIONS, SPECIAL_MAPPING
 from config.namespaces import ERROR
 
 INVALID_VALUES = {
@@ -22,29 +23,48 @@ DATETIME_FORMATS = [
     "%Y-%m-%dT%H:%M:%S.%f",
 ]
 
-CONFIG_FILE = "config/metrics.py"
-added_metrics = list()
+RE_DECIMAL_COMMA = re.compile(r'^[+-]?\d+,\d+$')
+RE_KG_ID_CHARS = re.compile(r'[^a-zA-Z0-9_\-]')
+RE_MULTI_DASH = re.compile(r'-+')
+RE_MULTI_UNDERSCORE = re.compile(r'_+')
+RE_MATCH_ERROR = re.compile(r'\b([45]\d{2})\b')
+INVALID_URI_CHARS = {' ', '<', '>', '\"', '{', '}', '|', '\\', '^', '`', '\’'}
+
+CONFIG_FILE = Path("config/metrics.py")
+added_metrics = set()
 
 def extract_timestamp_from_filename(filename: str) -> datetime:
     """
     Estrae la data dal nome del file CSV.
     """
-    filename = filename.replace("data/", "").replace(".csv", "").split("-")
-    return datetime(int(filename[0]), int(filename[1]), int(filename[2]))
+    name = Path(filename).stem
+    try:
+        parts = name.split("-")
+        return datetime(int(parts[0]), int(parts[1]), int(parts[2]))
+    except (ValueError, IndexError) as e:
+        print(f"Impossibile estrarre data dal filename: {filename}. Errore: {e}")
+        raise
 
 def clean_value(value: object) -> str | None:
     """
     Pulisce un valore dai casi invalidi e normalizza separatori decimali.
     """
-    if pd.isna(value) or str(value).strip().lower() in INVALID_VALUES:
+    if value is None or pd.isna(value):
         return None
+    
     s = str(value).strip()
-    if re.match(r'^[+-]?\d+,\d+$', s):
+    if s.lower() in INVALID_VALUES:
+        return None
+    
+    if RE_DECIMAL_COMMA.match(s):
         s = s.replace(",", ".")
+
     return s.replace("\"\"", "").replace("''", "")
 
 def normalize_string(v: any) -> str:
-    """Normalizza una stringa per il confronto."""
+    """
+    Normalizza una stringa per il confronto.
+    """
     if v is None:
         return ""
     return str(v).strip().replace("'", '"').replace(" ", "")
@@ -58,41 +78,36 @@ def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
     if s is None:
         return None
     
-    if datatype == XSD.anyURI:
-        if is_valid_uri(s):
-            return URIRef(s)
-        else:
-            print(f"URI non valido scartato: {s}")
+    try:
+        if datatype == XSD.anyURI:
+            return URIRef(s) if is_valid_uri(s) else None
+            
+        elif datatype == XSD.integer:
+                return Literal(int(s), datatype=XSD.integer)
+            
+        elif datatype in (XSD.decimal, XSD.double):
+                return Literal(float(s), datatype=datatype) 
+            
+        elif datatype == XSD.boolean:
+            sl = s.lower()
+            if sl in BOOLEAN_TRUE:
+                return Literal("True")
+            elif sl in BOOLEAN_FALSE:
+                return Literal("False")
+            else:
+                return None
+            
+        elif datatype == XSD.dateTime:
+            for fmt in DATETIME_FORMATS:
+                try:
+                    dt = datetime.strptime(s, fmt)
+                    return Literal(dt.isoformat(), datatype=XSD.dateTime)
+                except ValueError:
+                    continue
+            print(f"Formato data non riconosciuto per: {s}")
             return None
         
-    elif datatype == XSD.integer:
-        try:
-            return Literal(int(s), datatype=XSD.integer)
-        except ValueError:
-            return None
-        
-    elif datatype in (XSD.decimal, XSD.double):
-        try:
-            return Literal(float(s), datatype=datatype) 
-        except ValueError:
-            return None
-        
-    elif datatype == XSD.boolean:
-        sl = s.lower()
-        if sl in BOOLEAN_TRUE:
-            return Literal("True", datatype=XSD.boolean)
-        elif sl in BOOLEAN_FALSE:
-            return Literal("False", datatype=XSD.boolean)
-        else:
-            return None
-        
-    elif datatype == XSD.dateTime:
-        for fmt in DATETIME_FORMATS:
-            try:
-                dt = datetime.strptime(s, fmt)
-                return Literal(dt.isoformat(), datatype=XSD.dateTime)
-            except ValueError:
-                continue
+    except ValueError:
         return None
     
     return Literal(s, datatype=XSD.string)
@@ -111,35 +126,40 @@ def safe_kg_id(kg_id: str) -> str:
         kg_id = str(kg_id)
 
     kg_id = kg_id.replace("https", "").replace("http", "")
-    kg_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', kg_id)
-    kg_id = re.sub(r'-+', '', kg_id)
-    kg_id = re.sub(r'_+', '_', kg_id)
-    kg_id = kg_id.strip('_')
-
-    return clean_identifier(kg_id)
+    kg_id = RE_KG_ID_CHARS.sub('_', kg_id)
+    kg_id = RE_MULTI_DASH.sub('', kg_id)
+    kg_id = RE_MULTI_UNDERSCORE.sub('_', kg_id)
+    
+    return clean_identifier(kg_id.strip('_'))
 
 def map_http_error(value):
     """
-    Mappa stringhe di errore HTTP a URI di errore predefiniti.
+    Mappa gli errori HTTP a URI di errore predefiniti.
     """
-    str_value = str(value)
-    if str_value.isdigit():
-        code = int(value)
-        if code in ERROR_DEFINITIONS:
-            return ERROR[str(code)]
+    if value is None:
+        return None
 
-    code = special_mapping.get(str_value.lower())
+    str_value = str(value).strip()
+    code = None
+    match = re.search(RE_MATCH_ERROR, str_value)
+
+    if match:
+        found_code = int(match.group(1))
+        if found_code in ERROR_DEFINITIONS:
+            code = found_code
+
+    elif str_value.lower() in SPECIAL_MAPPING:
+        code = SPECIAL_MAPPING[str_value.lower()]
+
     if code:
-        return ERROR[code]
+        return ERROR[str(code)]
+    
     return None
 
 def check_value(value: object) -> URIRef | object:
     cleaned = clean_value(value)
     err_value = map_http_error(value)
-    if err_value is None:
-        return cleaned
-    else:
-        return err_value
+    return err_value if err_value else cleaned
 
 def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef, datatype: URIRef = None) -> None:
     """
@@ -161,36 +181,46 @@ def safe_literal(g: Graph, value: object, predicate: URIRef, subject_uri: URIRef
     if literal is not None:
         g.add((subject_uri, predicate, literal))
     else:
-        print(f"Warning: Non posso validare '{cleaned}' come {datatype} per {subject_uri} -> {predicate}")
+        print(f"Validazione fallita: '{cleaned}' come {datatype} per {subject_uri}")
 
-def add_new_metric_to_config(metric_name, datatype: str="string", access_methods="[UN]", dimension: str="Uncategorized", output_metric: str="", description: str="") -> None:
+def add_new_metric_to_config(metric_name, datatype: str="string", dimension: str="Uncategorized", output_metric: str="", description: str="", access_methods: str="[UN]") -> None:
     """
     Aggiunge una nuova metrica al file metrics.py che non esiste
     """    
     if metric_name in added_metrics:
         return 
 
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        content = f.read()
+    try:
+        content = CONFIG_FILE.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        print(f"File di configurazione non trovato: {CONFIG_FILE}")
+        return
 
     if f'metrics["{metric_name}"]' in content:
         return
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        content = f.read()
 
-    if f'metrics["{metric_name}"]' in content:
-        return
+    print(f"Metrica sconosciuta rilevata: '{metric_name}'. Aggiorno {CONFIG_FILE}...")
+    
+    new_entry = (
+        f'\t"{metric_name}": {{\n'
+        f'\t\t"datatype": XSD.{datatype},\n'
+        f'\t\t"access_methods": {access_methods},\n'
+        f'\t\t"dimension": "{dimension}",\n'
+        f'\t\t"description": "{description}",\n'
+        f'\t\t"metric_output": "{output_metric}",\n'
+        f'\t}},\n'
+    )
 
-    print(f"Metrica sconosciuta '{metric_name}', l'aggiungo.")
     pos = content.rfind("}")
-    new_entry = f'\t"{metric_name}": {{\n\t\t"datatype": XSD.{datatype},\n\t\t"access_methods": {access_methods},\n\t\t"dimension": {dimension}",\n\t}},\n\n'
+    if pos == -1:
+        print("Impossibile trovare la chiusura del dizionario metrics in config.")
+        return
+    
     new_content = content[:pos] + new_entry + content[pos:]
 
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        f.write(new_content)
-
-    added_metrics.append(metric_name)
-    print(f"Metrica '{metric_name}' aggiunta\n\n")
+    CONFIG_FILE.write_text(new_content, encoding="utf-8")
+    added_metrics.add(metric_name)
+    print(f"Metrica '{metric_name}' aggiunta con successo.")
 
 def is_valid_uri(uri: str) -> bool:
     """
@@ -203,8 +233,7 @@ def is_valid_uri(uri: str) -> bool:
     if not (parsed.scheme and parsed.netloc):
         return False
 
-    invalid_chars = r' <>\"{}|\\^`’“”‘›‹'
-    if any(ch in uri for ch in invalid_chars):
+    if any(ch in uri for ch in INVALID_URI_CHARS):
         return False
 
     return True

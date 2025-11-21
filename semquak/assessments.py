@@ -228,11 +228,11 @@ def add_metrics(g: Graph, row: pd.Series, new_timestamp: str, assessment_uri: UR
         else:
             # Register unknown metrics with default configuration.
             datatype = "string"
-            access_methods = [UN]
+            access_methods = "[UN]"
             dimension = "Uncategorized"
             output_metric = ""
             description = ""
-            add_new_metric_to_config(metric_name, datatype, dimension, output_metric, description)
+            add_new_metric_to_config(metric_name, datatype, dimension, output_metric, description, access_methods)
             print(f"  ! Metrica sconosciuta '{metric_name}' aggiunta alla configurazione")
             changed = True
             metrics_added += 1

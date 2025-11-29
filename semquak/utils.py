@@ -11,7 +11,7 @@ from config.namespaces import ERROR
 
 INVALID_VALUES = {
         "none", "nan", "null","", "-", "absent", "[]", "{}",
-        "void file absent", "\"\"", "''", " ", "[\'\']", "[\'\'. \'\']"
+        "void file absent", "\"\"", "''", " ", "[\'\']", "[\'\'. \'\']", "[, ]"
 }
 
 BOOLEAN_TRUE = {"true", "1", "yes", "on"}
@@ -23,7 +23,7 @@ DATETIME_FORMATS = [
     "%Y-%m-%dT%H:%M:%S.%f",
 ]
 
-RE_DECIMAL_COMMA = re.compile(r'^[+-]?\d+,\d+$')
+RE_DECIMAL_COMMA = re.compile(r'^[+-]?\d+,\d+(?:[eE][+-]?\d+)?$')
 RE_KG_ID_CHARS = re.compile(r'[^a-zA-Z0-9_\-]')
 RE_MULTI_DASH = re.compile(r'-+')
 RE_MULTI_UNDERSCORE = re.compile(r'_+')
@@ -83,7 +83,8 @@ def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
             return URIRef(s) if is_valid_uri(s) else None
             
         elif datatype == XSD.integer:
-                return Literal(int(s), datatype=XSD.integer)
+                s = s.split(".")
+                return Literal(int(s[0]), datatype=XSD.integer)
             
         elif datatype in (XSD.decimal, XSD.double):
                 return Literal(float(s), datatype=datatype) 
@@ -91,9 +92,9 @@ def validate_datatype(value: object, datatype: XSD) -> Literal | URIRef | None:
         elif datatype == XSD.boolean:
             sl = s.lower()
             if sl in BOOLEAN_TRUE:
-                return Literal("True")
+                return Literal("True", datatype=XSD.boolean)
             elif sl in BOOLEAN_FALSE:
-                return Literal("False")
+                return Literal("False", datatype=XSD.boolean)
             else:
                 return None
             

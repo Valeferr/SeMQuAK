@@ -18,7 +18,7 @@ def get_latest_assessment_for_kg(g: Graph, kg_id: str) -> URIRef:
     latest_date = None
 
     for ass in assessments:
-        for _, _, dt in g.triples((ass, PROV.generateAtTime, None)):
+        for _, _, dt in g.triples((ass, PROV.generatedAtTime, None)):
             if isinstance(dt, Literal) and dt.datatype == XSD.dateTime:
                 date_val = dt.toPython()
                 if latest_date is None or date_val > latest_date:

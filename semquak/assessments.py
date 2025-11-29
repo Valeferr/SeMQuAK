@@ -111,7 +111,7 @@ def add_attribute_to_assessment(g: Graph, attr_name: str, config: dict, attribut
     g.add((assessment_uri, EX.hasProfileAttribute, attribute_uri))
     g.add((attribute_uri, RDF.type, EX.AttributeContextAssessment))
     
-    safe_literal(g, value, config["predicate"], attribute_uri, datatype=XSD.string)
+    safe_literal(g, value, config["predicate"], attribute_uri, datatype=config["datatype"])
     for i, prov in enumerate(config['access_methods'], start=1):
         attr_ass_uri = URIRef(PROF[f"attribute/{attr_name}_{i}/{version_tag}"])
         g.add((attr_ass_uri, RDF.type, RDF.Property))
@@ -120,8 +120,6 @@ def add_attribute_to_assessment(g: Graph, attr_name: str, config: dict, attribut
         g.add((attr_ass_uri, EX.ComputedOver, target_uri))
         g.add((attribute_uri, EX.attributeProperty, attr_ass_uri))
         add_dimension(g, config["dimension"], attr_ass_uri)
-
-    g.add((attribute_uri, PROV.generatedAtTime, Literal(timestamp, datatype=XSD.dateTime)))
 
 def add_profile_attributes(g: Graph, row: pd.Series, profile_uri: URIRef, assessment_uri: URIRef, timestamp: datetime, changed: bool):
     """

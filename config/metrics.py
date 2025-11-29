@@ -56,7 +56,7 @@ metrics = {
 
     "Median latency": {
         "datatype": XSD.decimal,
-        "access_methods": [META],
+        "access_methods": [SPA],
         "dimension": "Performance",
         "metric_output": "Median latency in milliseconds. Best value: <1000 ms",
         "description": "if an HTTP-request is not answered within an average time of one second, the latency of the data source is considered too low",
@@ -64,7 +64,7 @@ metrics = {
 
     "Median throughput": {
          "datatype": XSD.decimal,
-        "access_methods": [META],
+        "access_methods": [SPA],
         "dimension": "Performance",
         "metric_output": "# of requests answered per second. Best value: Higher is better",
         "description": "ino. of answered HTTP-requests per second",
@@ -87,7 +87,7 @@ metrics = {
     },
 
     "PageRank": {
-        "datatype": XSD.string,
+        "datatype": XSD.decimal,
         "access_methods": [META],
         "dimension": "Reputation",
         "metric_output": "float: the page rank; empty: if the dataset is not interlinked.",
@@ -112,7 +112,7 @@ metrics = {
 
     "URIs Deferenceability": {
         "datatype": XSD.decimal,
-        "access_methods": [META],
+        "access_methods": [SPA],
         "dimension": "Accessibility",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
         "description": "HTTP URIs should be dereferenceable, i.e. HTTP clients should be able to retrieve the resources identified by the URI",
@@ -176,7 +176,7 @@ metrics = {
 
     "Availability score": {
         "datatype": XSD.decimal,
-        "access_methods": [META, SPA, VO],
+        "access_methods": [META],
         "dimension": "Availability",
         "metric_output": "[0,1]. Best value: 1.",
         "description": "Overall score for the availability dimension computed as a linear combination of the individual availability metrics scores",
@@ -184,7 +184,7 @@ metrics = {
     
     "Licensing score": {
         "datatype": XSD.decimal,
-        "access_methods": [META, SPA, VO],
+        "access_methods": [META],
         "dimension": "Licensing",
         "metric_output": "[0,1]. Best value: 1.",
         "description": "Overall score for the licensing dimension computed as a linear combination of the individual licensing metrics scores",
@@ -192,7 +192,7 @@ metrics = {
     
     "Interlinking score": {
         "datatype": XSD.decimal,
-        "access_methods": [META, SPA],
+        "access_methods": [META],
         "dimension": "Interlinking",
         "metric_output": "[0,1]. Best value: 1.",
         "description": "Overall score for the interlinking dimension computed as a linear combination of the individual interlinking metrics scores",
@@ -200,7 +200,7 @@ metrics = {
     
     "Performance score": {
         "datatype": XSD.decimal,
-        "access_methods": [SPA],
+        "access_methods": [META],
         "dimension": "Performance",
         "metric_output": "[0,1]. Best value: 1.",
         "description": "Overall score for the performance dimension computed as a linear combination of the individual performance metrics scores",
@@ -216,10 +216,10 @@ metrics = {
     
     "Consistency score": {
         "datatype": XSD.decimal,
-        "access_methods": [SPA],
+        "access_methods": [META],
         "dimension": "Consistency",
-        "metric_output": "",
-        "description": "",
+        "metric_output": "[0,1]. Best value: 1.",
+        "description": "Overall score for the consistency dimension computed as a linear combination of the individual consistency metrics scores",
     }, 
 
     "Conciseness score": {
@@ -232,7 +232,7 @@ metrics = {
     
     "Verifiability score": {
         "datatype": XSD.decimal,
-        "access_methods": [SPA, VO],
+        "access_methods": [META],
         "dimension": "Verifiability",
         "metric_output": "[0,1]. Best value: 1.",
         "description": "Overall score for the verifiability dimension computed as a linear combination of the individual verifiability metrics scores",
@@ -332,6 +332,22 @@ metrics = {
         "description": "Overall score for the security dimension computed as a linear combination of the individual security metrics scores",
     },
 
+    "Timeliness score": {
+		"datatype": XSD.decimal,
+		"access_methods": [META],
+		"dimension": "Timeliness",
+		"metric_output": "[0,1]. Best value: 1.",
+		"description": "Overall score for the timeliness dimension computed as a linear combination of the individual timeliness metrics scores",
+	},
+
+	"Interoperability score": {
+		"datatype": XSD.decimal,
+		"access_methods": [META],
+		"dimension": "Interoperability",
+		"metric_output": "[0,1]. Best value: 1.",
+		"description": "Overall score for the interoperability dimension computed as a linear combination of the individual interoperability metrics scores",
+	},
+
     "Number of entities" : {
         "datatype": XSD.integer,
         "access_methods": [VO, SPA],
@@ -350,7 +366,7 @@ metrics = {
 
     " Number of triples (metadata)": {
         "datatype": XSD.integer,
-        "access_methods": [META, SPA],
+        "access_methods": [META, VO],
         "dimension": "Amount of data",
         "metric_output": "integer: the number of triples; -: if the number of triples can't be retrieved",
         "description": "Number of triples",
@@ -493,23 +509,23 @@ metrics = {
 	},
 
 	"F1-M Unique and persistent ID": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: dataset registered in a search engine that provides a persistent DOI; 0: otherwise",
         "description": "Unique and persistent identifiers",
 	},
 
 	"F1-D URIs dereferenceability": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.decimal,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "# of dereferenceable URIs / total # of URIs. Best value: 1.",
         "description": "URIs dereferenceability",
 	},
 
 	"F2a-M - Metadata availability via standard primary sources": {
-		"datatype": XSD.string,
+		"datatype": XSD.integer,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: SPARQL endpoint, searchable engine, or VoID/DCAT; 0: otherwise",
@@ -517,7 +533,7 @@ metrics = {
 	},
 
 	"F2b-M Metadata availability for all the attributes covered in the FAIR score computation": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "# of covered attributes / total # of attributes. Best value: 1.",
@@ -525,7 +541,7 @@ metrics = {
 	},
 
 	"F3-M Data referrable via a DOI": {
-		"datatype": XSD.string,
+		"datatype": XSD.integer,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: metadata attach DOI(s) to data; 0: otherwise",
@@ -533,7 +549,7 @@ metrics = {
 	},
 
 	"F4-M Metadata registered in a searchable engine": {
-		"datatype": XSD.string,
+		"datatype": XSD.integer,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: dataset registered in any search engine; 0: otherwise",
@@ -541,7 +557,7 @@ metrics = {
 	},
 
 	"A1-D Working access point(s)": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "description": "Working access point(s)",
@@ -549,47 +565,47 @@ metrics = {
 	},
 
 	"A1-M Metadata availability via working primary sources": {
-		"datatype": XSD.string,
-		"access_methods": [UN],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: sources discovered in F2a-M woek and contain metadata; 0: otherwise",
         "description": "Working primary sources with metadata",
 	},
 
 	"A1.2 Authentication & HTTPS support": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: security requirements can be discovered via SPARQL; 0: otherwise",
         "description": "Authentication & HTTPS support",
 	},
 
 	"A2-M Registered in search engines": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: dataset registered in any search engine; 0: otherwise",
         "description": "Registered in search engines",
 	},
 
 	"R1.1 Machine- or human-readable license retrievable via any primary source": {
-		"datatype": XSD.string,
-		"access_methods": [META, SPA, VO],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: license explicitly reported; 0: otherwise",
         "description": "Any license retrievable",
 	},
 
 	"R1.2 Publisher information such as authors-contributors-publishers and sources": {
-		"datatype": XSD.string,
-		"access_methods": [SPA, VO],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: publisher info explicitly reported; 0: otherwise",
 		"description": "Publisher details",
 	},
 
 	"R1.3-D Data organized in a standardized way": {
-		"datatype": XSD.string,
+		"datatype": XSD.integer,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: SPARQL endpoint or valid data dump or OWL/RDFS; 0: otherwise",
@@ -597,24 +613,24 @@ metrics = {
 	},
 
 	"R1.3-M Metadata are described with VoID/DCAT predicates": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: published according to VoID/DCAT specs; 0: otherwise",
         "description": "VoID/DCAT description",
 	},
 
 	"I1-D Standard & open representation format": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: valid mediatypes or OWL/RDF(S); 0: otherwise",
 		"description": "Standard & open representation format",
 	},
 
 	"I1-M Metadata are described with VoID/DCAT predicates": {
-		"datatype": XSD.string,
-		"access_methods": [SPA],
+		"datatype": XSD.integer,
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: published according to VoID/DCAT specs; 0: otherwise",
 		"description": "VoID/DCAT description",
@@ -622,14 +638,14 @@ metrics = {
 
 	"I2 Use of FAIR vocabularies": {
 		"datatype": XSD.decimal,
-		"access_methods": [SPA],
+		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "# of FAIR vocabularies / total # of vocabularies. Best value: 1.",
 		"description": "Usage of FAIR vocabularies",
 	},
 
 	"I3-D Degree of connection": {
-		"datatype": XSD.string,
+		"datatype": XSD.integer,
 		"access_methods": [META],
 		"dimension": "FAIR",
         "metric_output": "1: contains link to another dataset; 0: otherwise",
@@ -749,7 +765,7 @@ metrics = {
 	},
 
 	"Deprecated classes/properties used": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [SPA],
 		"dimension": "Consistency",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online.",
@@ -789,7 +805,7 @@ metrics = {
 	},
 
 	"Triples with empty annotation problem": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [SPA],
 		"dimension": "Accuracy",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
@@ -797,7 +813,7 @@ metrics = {
 	},
 
 	"Triples with white space in annotation(at the beginning or at the end)": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [SPA],
 		"dimension": "Accuracy",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
@@ -805,7 +821,7 @@ metrics = {
 	},
 
 	"Triples with malformed data type literals problem": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [SPA],
 		"dimension": "Accuracy",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
@@ -813,7 +829,7 @@ metrics = {
 	},
 
 	"Functional properties with inconsistent values": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [SPA],
 		"dimension": "Accuracy",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
@@ -821,7 +837,7 @@ metrics = {
 	},
 
 	"Invalid usage of inverse-functional properties": {
-		"datatype": XSD.string,
+		"datatype": XSD.decimal,
 		"access_methods": [SPA],
 		"dimension": "Accuracy",
         "metric_output": "[0,1]. Best value: 1. -: if the SPARQL endpoint is missing or not online or error during the execution of the sparql query.",
@@ -877,7 +893,7 @@ metrics = {
 	},
 
 	"Time elapsed since last modification": {
-		"datatype": XSD.string,
+		"datatype": XSD.integer,
 		"access_methods": [SPA, VO],
 		"dimension": "Currency",
         "metric_output": "-: if the modification date is not correctly retrieved or not indicated; an integer: if the modification date is correctly retrieved",
@@ -902,10 +918,10 @@ metrics = {
 
 	"Url file VoID": {
 		"datatype": XSD.string,
-		"access_methods": [META, SPA, VO],
+		"access_methods": [META, SPA],
 		"dimension": "Availability",
-        "metric_output": "",
-        "description": "",
+        "metric_output": "url: if VoID file url exists; - or empty: if the VoID file url does not exist",
+        "description": "VoID file URL",
 	},
     
 	"Author (query)": {
@@ -925,7 +941,7 @@ metrics = {
 	},
     
 	"Availability of RDF dump (query)": {
-        "datatype": XSD.string,
+        "datatype": XSD.boolean,
         "access_methods": [SPA, VO],
         "dimension": "Availability",
         "metric_output": "False: The RDF dump is offline;  True: The RDF dump is online. -: The RDF dump is missing.",

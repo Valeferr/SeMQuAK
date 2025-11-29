@@ -3,7 +3,8 @@ from rdflib import Graph, Literal, URIRef
 from config.categories import categories
 from config.dimensions import dimensions
 from config.errors import ERROR_DEFINITIONS
-from config.namespaces import EX, PROF, QM, RDFS, SKOS, SPA, META, VO, UN, ERROR, XSD, DQV, DCAT, PROV, OWL, RDF
+from config.namespaces import EX, PROF, RDFS, SKOS, SPA, META, VO, UN, ERROR, XSD, DQV, DCAT, PROV, OWL, RDF
+from semquak.utils import clean_identifier
 
 def get_assessment_uri(kg_id: str, version_tag: str) -> URIRef:
     """Genera l'URI di un assessment dato il KG ID e il version tag"""
@@ -23,7 +24,7 @@ def get_quality_measurement_uri(metric_name: str, kg_id: str, timestamp: str) ->
 
 def get_metric_uri(metric_name: str) -> URIRef:
     """Genera l'URI di una metrica dato il nome della metrica"""
-    return URIRef(QM[f"{metric_name}_"])
+    return URIRef(EX[f"metric/{metric_name}_"])
 
 def get_attribute_uri(attr_name: str) -> URIRef:
     """Genera l'URI di un attributo dato il nome dell'attributo"""
@@ -64,27 +65,22 @@ def bind_common_namespaces(graph: Graph):
     """
     Esegue il bind dei namespace più comuni nel grafo.
     """
-    graph.bind("ex", EX)  
-    graph.bind("profile", PROF) 
-    graph.bind("qm", QM) 
-    graph.bind("SPARQL", SPA)
-    graph.bind("unknown", UN)
-    graph.bind("METADATA", META) 
-    graph.bind("VoID", VO)
-    graph.bind("error", ERROR) 
-    graph.bind("xsd", XSD)
-    graph.bind("dqv", DQV) 
-    graph.bind("dcat", DCAT) 
-    graph.bind("prov", PROV) 
-    graph.bind("owl", OWL)
-    graph.bind("rdf", RDF)
+    bindings = {
+        "ex": EX, "profile": PROF, "SPARQL": SPA,
+        "unknown": UN, "METADATA": META, "VoID": VO, "error": ERROR,
+        "xsd": XSD, "dqv": DQV, "dcat": DCAT, "prov": PROV,
+        "owl": OWL, "rdf": RDF
+    }
+
+    for prefix, namespace in bindings.items():
+        graph.bind(prefix, namespace)
 
 def add_categories_and_dimensions_nodes(g: Graph):
     """
     Aggiunge i nodi delle categorie e delle dimensioni delle metriche al grafo.
     """
     for cat_name, config in categories.items():
-        category_uri = get_category_uri(cat_name.replace(" ", "_"))
+        category_uri = get_category_uri(clean_identifier(cat_name))
         
         g.add((category_uri, RDF.type, DQV.Category))
         g.add((category_uri, SKOS.prefLabel, Literal(cat_name, lang="en")))
@@ -93,8 +89,8 @@ def add_categories_and_dimensions_nodes(g: Graph):
             g.add((category_uri, SKOS.definition, Literal(config["definition"], lang="en")))
 
     for dim_name, config in dimensions.items():
-        dim_uri = get_dimension_uri(dim_name.replace(" ", "_"))
-        category_uri = get_category_uri(config["category"].replace(" ", "_"))
+        dim_uri = get_dimension_uri(clean_identifier(dim_name))
+        category_uri = get_category_uri(clean_identifier(config["category"]))
 
         g.add((dim_uri, RDF.type, DQV.Dimension))
         g.add((dim_uri, SKOS.prefLabel, Literal(dim_name, lang="en")))

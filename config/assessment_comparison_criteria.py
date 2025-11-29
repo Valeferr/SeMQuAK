@@ -23,5 +23,4 @@ assessment_comparison_criteria = [
     #"metadata-media-type",
     "Serialization formats",
     "Availability for download (metadata)",
-    "Degree of connection",
 ]

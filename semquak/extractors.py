@@ -89,7 +89,8 @@ def extract_assessment_values(g: Graph, assessment_uri: URIRef) -> dict:
         if attr_name.endswith("query"):
             attr_name = attr_name.removesuffix("query") + "(query)"
         if attr_name in assessment_attributes:
-            expected_pred = str(assessment_attributes[attr_name]["predicate"])
+            config = profile_attributes.get(attr_name)
+            expected_pred = str(config["predicate"])
             if pred == expected_pred:
                 values["attributes"][attr_name] = row.attrValue
     
